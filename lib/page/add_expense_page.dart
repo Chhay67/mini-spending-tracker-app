@@ -23,7 +23,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
   final _amountController = TextEditingController();
   final _dateController = TextEditingController();
   final _noteController = TextEditingController();
-
+  DateTime _selectedDate = DateTime.now();
   @override
   void dispose() {
     _amountController.dispose();
@@ -80,9 +80,11 @@ class _AddExpensePageState extends State<AddExpensePage> {
                     Logger.info("Date field tapped");
                     final selectedDate = await DatePicker.showDatePickerDialog(
                       context,
+                      initialDate: _selectedDate,
                     );
                     if (selectedDate != null) {
-                      _dateController.text = DateFormat.formatDate(
+                      _selectedDate = selectedDate;
+                      _dateController.text = DateFormater.formatDate(
                         selectedDate,
                       );
                       Logger.info("Selected date: ${_dateController.text}");

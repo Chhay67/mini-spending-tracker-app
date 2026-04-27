@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mini_spend_tracker_app/core/utils/date_picker.dart';
 import 'package:mini_spend_tracker_app/core/widget/default_card.dart';
 
 import '../bloc/nav_bar_cubit/nav_bar_cubit.dart';
+import '../bloc/selected_month_cubit/selected_month_cubit.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/app_padding.dart';
 import '../core/utils/app_spacing.dart';
 import '../core/utils/currency_format.dart';
+import '../core/utils/date_format.dart';
 import '../core/utils/responsive_utils.dart';
 import '../route/routes.dart';
 import 'main_scaffold_page.dart';
@@ -27,9 +30,12 @@ class DashboardPage extends StatelessWidget {
           _SummaryBudgetView(),
           _DailyInsightView(),
           _QuickActionButtonView(
-              onAddExpense: () => _navigateToRoute(context, Routes.addExpense.path),
-              onViewTransactions: () => _navigateToRoute(context, Routes.transactions.path),
-              onViewSummary: () => _navigateToRoute(context, Routes.categorySummary.path),
+            onAddExpense: () =>
+                _navigateToRoute(context, Routes.addExpense.path),
+            onViewTransactions: () =>
+                _navigateToRoute(context, Routes.transactions.path),
+            onViewSummary: () =>
+                _navigateToRoute(context, Routes.categorySummary.path),
           ),
         ],
       ),
@@ -44,10 +50,6 @@ class DashboardPage extends StatelessWidget {
       context.goNamed(tabs[index].route.name);
     }
   }
-
-
-
-
 }
 
 class _MonthSelection extends StatelessWidget {
@@ -60,21 +62,40 @@ class _MonthSelection extends StatelessWidget {
       constraints: const BoxConstraints(
         maxWidth: ResponsiveUtils.mobileMaxWidth,
       ),
-      child: Row(
-        children: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.arrow_back_outlined)),
-          Expanded(
-            child: Text(
-              "April 2026",
-              textAlign: TextAlign.center,
-              style: textTheme.titleLarge,
-            ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.arrow_forward_outlined),
-          ),
-        ],
+      child: BlocBuilder<SelectedMonthCubit, DateTime>(
+        builder: (context, selectedMonth) {
+          return Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  context.read<SelectedMonthCubit>().onClickPreviousMonth();
+                },
+                icon: Icon(Icons.arrow_back_outlined),
+              ),
+              Expanded(
+                child: TextButton(
+                  child: Text(
+                    DateFormater.formatYearMonth(selectedMonth),
+                    textAlign: TextAlign.center,
+                    style: textTheme.titleLarge,
+                  ),
+                  onPressed: () async {
+                    final pickedMonth = await DatePicker.showMonthPickerDialog(context,initialDate: selectedMonth);
+                    if (pickedMonth != null && context.mounted) {
+                      context.read<SelectedMonthCubit>().onMonthChanged(newMonth: pickedMonth);
+                    }
+                  },
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  context.read<SelectedMonthCubit>().onClickNextMonth();
+                },
+                icon: Icon(Icons.arrow_forward_outlined),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
