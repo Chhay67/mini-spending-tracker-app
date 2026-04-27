@@ -1,5 +1,5 @@
 
-enum Flavor {
+enum FlavorEnum {
   staging,
   dev,
   production,

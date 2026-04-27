@@ -5,37 +5,41 @@ import '../enum/flavor.dart';
 
 
 class AppConfig {
-  AppConfig._();
+  AppConfig._({
+    required this.flavor,
+  });
 
-  static Flavor appFlavor = Flavor.dev;
+  final FlavorEnum flavor;
 
-  static void init({required Flavor flavor}) {
-    appFlavor = flavor;
+  static late AppConfig instance;
+
+  static void init({required FlavorEnum flavor}) {
+    instance = AppConfig._(flavor: flavor);
   }
 
-  static bool get isProduction => appFlavor == Flavor.production;
+  static FlavorEnum get appFlavor => instance.flavor;
+
+  // static bool get isProduction => appFlavor == FlavorEnum.production;
 
   static String get appName {
     switch (appFlavor) {
-      case Flavor.dev:
+      case FlavorEnum.dev:
         return 'Spend Tracker Dev';
-      case Flavor.staging:
+      case FlavorEnum.staging:
         return 'Spend Tracker Staging';
-      case Flavor.production:
+      case FlavorEnum.production:
         return 'Spend Tracker';
     }
   }
 
 // static FirebaseOptions get firebaseOptions {
 //   switch (appFlavor) {
-//     case Flavor.dev:
+//     case FlavorEnum.dev:
 //       return dev.DefaultFirebaseOptions.currentPlatform;
-//     case Flavor.staging:
+//     case FlavorEnum.staging:
 //       return dev.DefaultFirebaseOptions.currentPlatform;
-//     case Flavor.production:
+//     case FlavorEnum.production:
 //       return prod.DefaultFirebaseOptions.currentPlatform;
-//     default:
-//       return dev.DefaultFirebaseOptions.currentPlatform;
 //   }
 // }
 }

@@ -1,22 +1,23 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:mini_spend_tracker_app/core/enum/flavor.dart';
 import 'package:mini_spend_tracker_app/root_app.dart';
 
 import 'core/config/app_config.dart';
-import 'core/theme/app_themes.dart';
 import 'core/utils/logger.dart';
+import 'init_dependencies.dart';
 
-void main() async {
+Future<void> main() async {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      setSystemUIOverlayStyle();
       setUrlStrategy(PathUrlStrategy());
-      AppConfig.init(flavor: Flavor.dev);
+      AppConfig.init(flavor: FlavorEnum.dev);
+      await initDependencies(config: AppConfig.instance);
       // await Firebase.initializeApp(options: AppConfig.firebaseOptions);
-      runApp(RootApp());
+      runApp(const RootApp());
     },
     (error, stackTrace) {
       Logger.error(
