@@ -13,6 +13,7 @@ class AppConfig {
 
   static late AppConfig instance;
 
+
   static void init({required FlavorEnum flavor}) {
     instance = AppConfig._(flavor: flavor);
   }
@@ -20,7 +21,8 @@ class AppConfig {
   static FlavorEnum get appFlavor => instance.flavor;
 
   // static bool get isProduction => appFlavor == FlavorEnum.production;
-
+  static const String baseUrl =
+      'https://script.google.com/macros/s/AKfycbxUpOhsDDy7jp5KWOM77gScm1cZS-3oljta_4ElJg1nfmObIZgJ5nzDoaf1YVkLV_dp/exec';
   static String get appName {
     switch (appFlavor) {
       case FlavorEnum.dev:

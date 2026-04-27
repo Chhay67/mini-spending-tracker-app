@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mini_spend_tracker_app/bloc/dashboard_bloc/dashboard_bloc.dart';
 import 'package:mini_spend_tracker_app/core/utils/date_picker.dart';
 import 'package:mini_spend_tracker_app/core/widget/default_card.dart';
 
@@ -12,6 +13,7 @@ import '../core/utils/app_spacing.dart';
 import '../core/utils/currency_format.dart';
 import '../core/utils/date_format.dart';
 import '../core/utils/responsive_utils.dart';
+import '../init_dependencies.dart';
 import '../route/routes.dart';
 import 'main_scaffold_page.dart';
 
@@ -20,24 +22,43 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: AppPadding.all,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        spacing: AppSpacing.defaultSpacing,
-        children: [
-          _MonthSelection(),
-          _SummaryBudgetView(),
-          _DailyInsightView(),
-          _QuickActionButtonView(
-            onAddExpense: () =>
-                _navigateToRoute(context, Routes.addExpense.path),
-            onViewTransactions: () =>
-                _navigateToRoute(context, Routes.transactions.path),
-            onViewSummary: () =>
-                _navigateToRoute(context, Routes.categorySummary.path),
+    return BlocProvider(
+      create: (context) => serviceLocator<DashboardBloc>()
+        ..add(
+          LoadDashboardDataEvent(
+            month: context.read<SelectedMonthCubit>().state,
           ),
-        ],
+        ),
+      child: BlocListener<SelectedMonthCubit, DateTime>(
+        listener: (context, state) {
+          context.read<DashboardBloc>().add(
+            LoadDashboardDataEvent(month: state),
+          );
+        },
+        child: BlocBuilder<DashboardBloc, DashboardState>(
+          builder: (context, state) {
+            return SingleChildScrollView(
+              padding: AppPadding.all,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: AppSpacing.defaultSpacing,
+                children: [
+                  _MonthSelection(),
+                  _SummaryBudgetView(),
+                  _DailyInsightView(),
+                  _QuickActionButtonView(
+                    onAddExpense: () =>
+                        _navigateToRoute(context, Routes.addExpense.path),
+                    onViewTransactions: () =>
+                        _navigateToRoute(context, Routes.transactions.path),
+                    onViewSummary: () =>
+                        _navigateToRoute(context, Routes.categorySummary.path),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -80,9 +101,14 @@ class _MonthSelection extends StatelessWidget {
                     style: textTheme.titleLarge,
                   ),
                   onPressed: () async {
-                    final pickedMonth = await DatePicker.showMonthPickerDialog(context,initialDate: selectedMonth);
+                    final pickedMonth = await DatePicker.showMonthPickerDialog(
+                      context,
+                      initialDate: selectedMonth,
+                    );
                     if (pickedMonth != null && context.mounted) {
-                      context.read<SelectedMonthCubit>().onMonthChanged(newMonth: pickedMonth);
+                      context.read<SelectedMonthCubit>().onMonthChanged(
+                        newMonth: pickedMonth,
+                      );
                     }
                   },
                 ),
