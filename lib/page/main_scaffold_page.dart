@@ -11,7 +11,6 @@ class MainScaffoldPage extends StatefulWidget {
   final Widget child;
 
   static const tabs = [
-    (icon: Icons.add_circle_outline, label: 'Add', route: Routes.addExpense),
     (
       icon: Icons.dashboard_outlined,
       label: 'Dashboard',
@@ -22,6 +21,7 @@ class MainScaffoldPage extends StatefulWidget {
       label: 'Transactions',
       route: Routes.transactions,
     ),
+    (icon: Icons.add_circle_outline, label: 'Add', route: Routes.addExpense),
     (icon: Icons.bar_chart, label: 'Summary', route: Routes.categorySummary),
 
     (icon: Icons.settings_outlined, label: 'Settings', route: Routes.settings),

@@ -30,7 +30,7 @@ class DashboardPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => serviceLocator<DashboardBloc>()..add(LoadDashboardDataEvent(month: context.read<SelectedMonthCubit>().state)),
       child: BlocListener<SelectedMonthCubit, DateTime>(
-        listener: (context, state) => context.read<DashboardBloc>().add(LoadDashboardDataEvent(month: state)),
+        listener: (context, selectedMonth) => context.read<DashboardBloc>().add(LoadDashboardDataEvent(month: selectedMonth)),
 
         child: SingleChildScrollView(
           padding: AppPadding.all,

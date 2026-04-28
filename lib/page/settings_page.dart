@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mini_spend_tracker_app/core/utils/currency_format.dart';
+import 'package:mini_spend_tracker_app/core/utils/logger.dart';
 import 'package:mini_spend_tracker_app/core/widget/custom_text_form_field.dart';
 import 'package:mini_spend_tracker_app/core/widget/default_card.dart';
 
+import '../bloc/selected_month_cubit/selected_month_cubit.dart';
+import '../bloc/settings/categories_bloc/categories_bloc.dart';
+import '../bloc/settings/monthly_budget_cubit/monthly_budget_cubit.dart';
+import '../core/state/save_state.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/app_padding.dart';
+import '../core/utils/app_snack_bar.dart';
 import '../core/utils/app_spacing.dart';
 import '../core/utils/app_validator.dart';
 import '../core/utils/responsive_utils.dart';
+import '../core/widget/error_state_widget.dart';
+import '../init_dependencies.dart';
+import '../model/category_model.dart';
+import 'widget/categories_shimmer.dart';
+import 'widget/monthly_budget_shimmer.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -15,67 +28,291 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return SingleChildScrollView(
-      padding: AppPadding.all,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        spacing: AppSpacing.defaultSpacing,
-        children: [
-          Text(
-            "Settings",
-            textAlign: TextAlign.start,
-            style: textTheme.displayLarge?.copyWith(
-              color: AppColors.textPrimary,
-            ),
-          ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<MonthlyBudgetCubit>(
+          create: (context) => serviceLocator<MonthlyBudgetCubit>()..loadMonthlyBudget(month: context.read<SelectedMonthCubit>().state),
+        ),
+        BlocProvider<CategoriesBloc>(create: (_) => serviceLocator<CategoriesBloc>()..add(const LoadCategoriesEvent())),
+      ],
 
-          DefaultCard(
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<SelectedMonthCubit, DateTime>(
+            listener: (context, selectedMonth) => context.read<MonthlyBudgetCubit>().loadMonthlyBudget(month: selectedMonth),
+          ),
+        ],
+        child: SingleChildScrollView(
+          padding: AppPadding.all,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            spacing: AppSpacing.defaultSpacing,
+            children: [
+              Text(
+                "Settings",
+                textAlign: TextAlign.start,
+                style: textTheme.displayLarge?.copyWith(color: AppColors.textPrimary),
+              ),
+              _MonthlyBudgetView(),
+              _CategoriesView(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MonthlyBudgetView extends StatelessWidget {
+  const _MonthlyBudgetView();
+
+  void onLoadMonthlyBudget(BuildContext context) {
+    final selectedMonth = context.read<SelectedMonthCubit>().state;
+    context.read<MonthlyBudgetCubit>().loadMonthlyBudget(month: selectedMonth);
+  }
+
+  void onSaveMonthlyBudget(BuildContext context) {
+    context.read<MonthlyBudgetCubit>().saveMonthlyBudget();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return BlocConsumer<MonthlyBudgetCubit, MonthlyBudgetState>(
+      listener: (context, state) {
+        if (state is MonthlyBudgetLoaded) {
+          final saveState = state.saveState;
+
+          if (saveState is SaveSuccess) {
+            onLoadMonthlyBudget(context);
+            AppSnackBar.showSuccess(context, message: "Monthly budget saved successfully");
+            return;
+          }
+          if (saveState is SaveError) {
+            AppSnackBar.showError(context, message: "Failed to save monthly budget: ${saveState.message}");
+            return;
+          }
+        }
+      },
+      builder: (context, state) {
+        if (state is MonthlyBudgetLoading || state is MonthlyBudgetInitial) {
+          return const MonthlyBudgetShimmer();
+        }
+
+        if (state is MonthlyBudgetError) {
+          return ErrorStateWidget(message: state.message, onRetry: () => onLoadMonthlyBudget(context));
+        }
+        if (state is MonthlyBudgetLoaded) {
+          final data = state.data;
+          final isSaving = state.saveState is SaveLoading;
+
+          return DefaultCard(
             children: [
               CustomTextFormField(
                 label: "Monthly Budget",
+                enabled: !isSaving,
+                readOnly: !isSaving,
+                labelTrailing: OutlinedButton(
+                  onPressed: isSaving ? null : () => onSaveMonthlyBudget(context),
+                  child: isSaving ? Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator())) : Text("Save"),
+                ),
                 hintText: "0.00",
+                initialValue: CurrencyFormat.number(data.monthlyBudget),
                 style: textTheme.titleMedium?.copyWith(fontSize: 24),
                 hintStyle: textTheme.labelSmall?.copyWith(fontSize: 24),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: false,
-                ),
-                // Only digits and a single decimal point are accepted
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                ],
+                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
                 validator: AppValidator.amount,
                 prefixIcon: Icon(Icons.attach_money),
+
+                onChanged: (value) {
+                  if (value.isEmpty) return;
+                  final parsedValue = num.tryParse(value);
+                  if (parsedValue != null) {
+                    final selectedMonth = context.read<SelectedMonthCubit>().state;
+                    context.read<MonthlyBudgetCubit>().updateMonthlyBudget(newBudget: parsedValue, month: selectedMonth);
+                  }
+                },
               ),
             ],
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+}
+
+class _CategoriesView extends StatefulWidget {
+  const _CategoriesView();
+
+  @override
+  State<_CategoriesView> createState() => _CategoriesViewState();
+}
+
+class _CategoriesViewState extends State<_CategoriesView> {
+  final formKey = GlobalKey<FormState>();
+  final TextEditingController categoryNameController = TextEditingController();
+
+  @override
+  dispose() {
+    categoryNameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> onAddCategory(BuildContext context) async {
+    Logger.info("Add category button pressed");
+    categoryNameController.clear();
+
+    final minWidth = MediaQuery.of(context).size.width * 0.90;
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        constraints: BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth, minWidth: minWidth),
+        title: const Text("Add Category"),
+        content: Form(
+          key: formKey,
+          child: CustomTextFormField(
+            label: "Category Name",
+            hintText: "e.g. Food, Transport, etc.",
+            controller: categoryNameController,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return "Category name is required";
+              }
+              return null;
+            },
           ),
-          _CategoryHeaderButton(onAddCategory: () {}),
-          _CategoriesListView<String>(
-            onDeleteCategory: (category) {},
-            categories: [
-              "Food",
-              "Transport",
-              "Entertainment",
-              "Utilities",
-              "Health",
-              "Education",
-              "Shopping",
-              "Travel",
-              "Gifts",
-              "Other",
-            ],
+        ),
+        actions: [
+          OutlinedButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              if (!formKey.currentState!.validate()) return;
+
+              // Check if the widget is still on screen before using context!
+              if (!mounted) return;
+              final newCategoryName = categoryNameController.text.trim();
+              context.read<CategoriesBloc>().add(AddCategoryEvent(categoryName: newCategoryName));
+              Navigator.of(dialogContext).pop();
+            },
+            child: const Text("Add"),
           ),
-          ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: ResponsiveUtils.mobileMaxWidth,
-            ),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.maxFinite, 52),
+        ],
+      ),
+    );
+  }
+
+  Future<void> onDeleteCategory(BuildContext context, CategoryModel category) async {
+    Logger.info("Delete category with id: ${category.categoryId} and name: ${category.name}");
+    final minWidth = MediaQuery.of(context).size.width * 0.90;
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        constraints: BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth, minWidth: minWidth),
+        title: const Text("Delete Category"),
+        content: Text("Are you sure you want to delete the category \"${category.name}\"? This action cannot be undone."),
+        actions: [
+          OutlinedButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text("Cancel")),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () {
+              // Check if the widget is still on screen before using context!
+              if (!mounted) return;
+              context.read<CategoriesBloc>().add(DeleteCategoryEvent(categoryId: category.categoryId));
+              Navigator.of(dialogContext).pop();
+            },
+            child: const Text("Delete"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<CategoriesBloc, CategoriesState>(
+      listener: (context, state) {
+        if (state is CategoriesLoaded) {
+          final saveState = state.saveState;
+          if (saveState is SaveLoading) {
+            return;
+          }
+          if (saveState is SaveSuccess) {
+            context.read<CategoriesBloc>().add(const LoadCategoriesEvent());
+            AppSnackBar.showSuccess(context, message: "Categories saved successfully");
+            return;
+          }
+          if (saveState is SaveError) {
+            AppSnackBar.showError(context, message: "Failed to save categories: ${saveState.message}");
+            return;
+          }
+        }
+      },
+      builder: (context, state) {
+        if (state is CategoriesLoading || state is CategoriesInitial) {
+          return const CategoriesShimmer();
+        }
+
+        if (state is CategoriesError) {
+          return ErrorStateWidget(message: state.message, onRetry: () => context.read<CategoriesBloc>().add(const LoadCategoriesEvent()));
+        }
+        if (state is CategoriesLoaded) {
+          final isSaving = state.saveState is SaveLoading;
+          return Column(
+            spacing: AppSpacing.defaultSpacing,
+            children: [
+              _CategoryHeaderButton(onAddCategory: () => onAddCategory(context)),
+              _CategoriesListView<CategoryModel>(
+                onDeleteCategory: (category) => onDeleteCategory(context, category),
+                labelBuilder: (category) => category.name,
+                categories: state.categories,
               ),
-              onPressed: () {},
-              child: Text("Save Settings"),
-            ),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(minimumSize: Size(double.maxFinite, 52)),
+                  onPressed: isSaving
+                      ? null
+                      : () {
+                          context.read<CategoriesBloc>().add(const SaveCategoriesEvent());
+                        },
+                  child: isSaving
+                      ? Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator()))
+                      : Text("Save Categories"),
+                ),
+              ),
+            ],
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+}
+
+class _CategoryHeaderButton extends StatelessWidget {
+  const _CategoryHeaderButton({this.onAddCategory});
+
+  final Function()? onAddCategory;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Categories",
+            textAlign: TextAlign.start,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.textPrimary),
+          ),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(side: BorderSide(color: AppColors.primaryDark, width: 1)),
+            onPressed: onAddCategory,
+            child: Text("Add"),
           ),
         ],
       ),
@@ -84,14 +321,11 @@ class SettingsPage extends StatelessWidget {
 }
 
 class _CategoriesListView<T> extends StatelessWidget {
-  const _CategoriesListView({
-    super.key,
-    this.categories = const [],
-    this.onDeleteCategory,
-  });
+  const _CategoriesListView({super.key, this.categories = const [], this.onDeleteCategory, required this.labelBuilder});
 
   final List<T> categories;
   final Function(T category)? onDeleteCategory;
+  final String Function(T category) labelBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -102,17 +336,13 @@ class _CategoriesListView<T> extends StatelessWidget {
           child: Text(
             "No categories added yet",
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
           ),
         ),
       );
     }
     return ConstrainedBox(
-      constraints: const BoxConstraints(
-        maxWidth: ResponsiveUtils.mobileMaxWidth,
-      ),
+      constraints: const BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth),
       child: ListView.builder(
         itemCount: categories.length,
         shrinkWrap: true,
@@ -129,48 +359,13 @@ class _CategoriesListView<T> extends StatelessWidget {
           );
           return ListTile(
             shape: shape,
-            title: Text(categories[index].toString()),
+            title: Text(labelBuilder(categories[index])),
             trailing: IconButton(
               onPressed: () => onDeleteCategory?.call(categories[index]),
               icon: Icon(Icons.delete, color: AppColors.error),
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _CategoryHeaderButton extends StatelessWidget {
-  const _CategoryHeaderButton({this.onAddCategory});
-
-  final Function()? onAddCategory;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(
-        maxWidth: ResponsiveUtils.mobileMaxWidth,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            "Categories",
-            textAlign: TextAlign.start,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(color: AppColors.textPrimary),
-          ),
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(
-                color: AppColors.primaryDark,
-                width: 1,
-              )
-            ),
-              onPressed: onAddCategory, child: Text("Add")),
-        ],
       ),
     );
   }

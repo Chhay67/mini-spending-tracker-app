@@ -43,9 +43,11 @@ class CustomTextFormField extends StatelessWidget {
     this.isRequired = false,
       this.prefixIcon,
     this.hintStyle,
+    this.labelTrailing,
   });
 
   final String? label;
+  final Widget? labelTrailing;
   final String? hintText;
   final Widget? suffixIcon;
   final void Function()? onTap;
@@ -63,8 +65,8 @@ class CustomTextFormField extends StatelessWidget {
 
   final TextAlign textAlign;
   final TextInputType? keyboardType;
-  final void Function(String)? onChanged;
-  final void Function(String?)? onSaved;
+  final void Function(String value)? onChanged;
+  final void Function(String? value)? onSaved;
   final TextDirection? textDirection;
   final bool autocorrect;
   final Iterable<String>? autofillHints;
@@ -92,22 +94,33 @@ class CustomTextFormField extends StatelessWidget {
       spacing: AppSpacing.smallSpacing,
       children: [
         if (label != null)
-          RichText(
-            text: TextSpan(
-              text: label,
-              style: textTheme.bodyMedium?.copyWith(
-                color: AppColors.textPrimary,
-              ),
-              children: [
-                if (isRequired)
-                  TextSpan(
-                    text: " *",
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: RichText(
+                  text: TextSpan(
+                    text: label,
                     style: textTheme.bodyMedium?.copyWith(
-                      color: AppColors.error,
+                      color: AppColors.textPrimary,
                     ),
+                    children: [
+                      if (isRequired)
+                        TextSpan(
+                          text: " *",
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: AppColors.error,
+                          ),
+                        ),
+                    ],
                   ),
+                ),
+              ),
+              if(labelTrailing != null) ...[
+                const SizedBox(width: 8),
+                labelTrailing!,
               ],
-            ),
+            ],
           ),
         TextFormField(
           onTap: onTap,
