@@ -162,7 +162,14 @@ class _CategoryHeaderButton extends StatelessWidget {
               context,
             ).textTheme.titleLarge?.copyWith(color: AppColors.textPrimary),
           ),
-          ElevatedButton(onPressed: onAddCategory, child: Text("Add")),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(
+                color: AppColors.primaryDark,
+                width: 1,
+              )
+            ),
+              onPressed: onAddCategory, child: Text("Add")),
         ],
       ),
     );
