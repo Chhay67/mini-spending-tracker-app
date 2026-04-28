@@ -20,6 +20,10 @@ class CustomDropdownButton2<T> extends StatefulWidget {
     this.isRequired = false,
     this.validator,
     this.autoValidateMode,
+    this.isLoading = false,
+    this.isError = false,
+    this.errorMessage,
+    this.onRefresh,
   });
 
   final List<T> items;
@@ -45,6 +49,13 @@ class CustomDropdownButton2<T> extends StatefulWidget {
   final String? Function(T?)? validator;
 
   final AutovalidateMode? autoValidateMode;
+
+  final bool isLoading;
+
+  final bool isError;
+  final String? errorMessage;
+
+  final Future<void> Function()? onRefresh;
 
   @override
   State<CustomDropdownButton2<T>> createState() =>
@@ -117,14 +128,14 @@ class _CustomDropdownButton2State<T>
               ],
             ),
           ),
-
         // ── Dropdown ──────────────────────────────────────────────────────────
         DropdownButtonFormField2<T>(
           // v3.0.0: use valueListenable instead of value
           valueListenable: _valueNotifier,
           isExpanded: true,
           style: textTheme.titleMedium,
-          autovalidateMode: widget.autoValidateMode ?? AutovalidateMode.onUserInteraction,
+          autovalidateMode:
+              widget.autoValidateMode ?? AutovalidateMode.onUserInteraction,
           // ── InputDecoration — identical to CustomTextFormField ────────────
           decoration: InputDecoration(
             hintStyle: textTheme.bodySmall,
@@ -133,6 +144,12 @@ class _CustomDropdownButton2State<T>
             focusedBorder: normalBorder,
             errorBorder: errorBorder,
             focusedErrorBorder: errorBorder,
+            errorText: widget.isError
+                ? widget.errorMessage ?? 'An error occurred'
+                : null,
+            errorStyle: textTheme.bodySmall?.copyWith(
+              color: AppColors.error,
+            ),
             filled: true,
             fillColor: AppColors.surface,
             focusColor: AppColors.surface,
@@ -147,7 +164,6 @@ class _CustomDropdownButton2State<T>
           buttonStyleData: const FormFieldButtonStyleData(
             padding: EdgeInsets.zero,
           ),
-
           // ── Dropdown menu panel ───────────────────────────────────────────
           dropdownStyleData: DropdownStyleData(
             elevation: 2,
@@ -167,10 +183,30 @@ class _CustomDropdownButton2State<T>
           isDense: true,
           // ── Chevron icon ──────────────────────────────────────────────────
           iconStyleData: IconStyleData(
-            icon: Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: Colors.grey.shade500,
-            ),
+            icon: widget.isError
+                ? IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    tooltip: 'Refresh',
+                    onPressed: widget.onRefresh == null
+                        ? null
+                        : () async => await widget.onRefresh!.call(),
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
+                  )
+                : widget.isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: Colors.grey.shade500,
+                      ),
           ),
 
           // ── Selected item highlight ───────────────────────────────────────
@@ -192,12 +228,14 @@ class _CustomDropdownButton2State<T>
           },
 
           // ── Items — v3.0.0 uses DropdownItem<T>, not DropdownMenuItem<T> ──
-          onChanged: (T? newValue) {
-            if (newValue != null) {
-              _valueNotifier.value = newValue;
-              widget.onChanged(newValue);
-            }
-          },
+          onChanged: widget.isLoading
+              ? null
+              : (T? newValue) {
+                  if (newValue != null) {
+                    _valueNotifier.value = newValue;
+                    widget.onChanged(newValue);
+                  }
+                },
           items: widget.items
               .map(
                 (e) => DropdownItem<T>(

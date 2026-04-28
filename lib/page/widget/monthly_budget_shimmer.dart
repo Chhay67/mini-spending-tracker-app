@@ -19,11 +19,23 @@ class MonthlyBudgetShimmer extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: AppSpacing.smallSpacing,
           children: [
-            Text(
-              "Monthly Budget",
-              style: textTheme.bodyMedium?.copyWith(
-                color: AppColors.textPrimary,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    "Monthly Budget",
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const OutlinedButton(
+                  onPressed: null,
+                  child: Text("Save"),
+                ),
+              ],
             ),
             Shimmer.fromColors(
               baseColor: Colors.grey[300]!,

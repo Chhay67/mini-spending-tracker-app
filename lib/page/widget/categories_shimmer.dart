@@ -84,6 +84,16 @@ class CategoriesShimmer extends StatelessWidget {
             },
           ),
         ),
+        
+        // Static Save Button
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(minimumSize: const Size(double.maxFinite, 52)),
+            onPressed: null,
+            child: const Text("Save Categories"),
+          ),
+        ),
       ],
     );
   }

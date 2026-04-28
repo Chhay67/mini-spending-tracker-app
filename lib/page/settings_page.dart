@@ -63,8 +63,15 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-class _MonthlyBudgetView extends StatelessWidget {
+class _MonthlyBudgetView extends StatefulWidget {
   const _MonthlyBudgetView();
+
+  @override
+  State<_MonthlyBudgetView> createState() => _MonthlyBudgetViewState();
+}
+
+class _MonthlyBudgetViewState extends State<_MonthlyBudgetView> {
+  final _formKey = GlobalKey<FormState>();
 
   void onLoadMonthlyBudget(BuildContext context) {
     final selectedMonth = context.read<SelectedMonthCubit>().state;
@@ -72,6 +79,9 @@ class _MonthlyBudgetView extends StatelessWidget {
   }
 
   void onSaveMonthlyBudget(BuildContext context) {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     context.read<MonthlyBudgetCubit>().saveMonthlyBudget();
   }
 
@@ -107,35 +117,36 @@ class _MonthlyBudgetView extends StatelessWidget {
           final data = state.data;
           final isSaving = state.saveState is SaveLoading;
 
-          return DefaultCard(
-            children: [
-              CustomTextFormField(
-                label: "Monthly Budget",
-                enabled: !isSaving,
-                readOnly: !isSaving,
-                labelTrailing: OutlinedButton(
-                  onPressed: isSaving ? null : () => onSaveMonthlyBudget(context),
-                  child: isSaving ? Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator())) : Text("Save"),
-                ),
-                hintText: "0.00",
-                initialValue: CurrencyFormat.number(data.monthlyBudget),
-                style: textTheme.titleMedium?.copyWith(fontSize: 24),
-                hintStyle: textTheme.labelSmall?.copyWith(fontSize: 24),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
-                validator: AppValidator.amount,
-                prefixIcon: Icon(Icons.attach_money),
+          return Form(
+            key: _formKey,
+            child: DefaultCard(
+              children: [
+                CustomTextFormField(
+                  label: "Monthly Budget",
+                  autoValidateMode: AutovalidateMode.onUserInteraction,
+                  labelTrailing: OutlinedButton(
+                    onPressed: isSaving ? null : () => onSaveMonthlyBudget(context),
+                    child: isSaving ? Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator())) : Text("Save"),
+                  ),
+                  hintText: "0.00",
+                  initialValue: CurrencyFormat.number(data.monthlyBudget),
+                  style: textTheme.titleMedium?.copyWith(fontSize: 24),
+                  hintStyle: textTheme.labelSmall?.copyWith(fontSize: 24),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
+                  validator: AppValidator.amount,
+                  prefixIcon: Icon(Icons.attach_money),
 
-                onChanged: (value) {
-                  if (value.isEmpty) return;
-                  final parsedValue = num.tryParse(value);
-                  if (parsedValue != null) {
-                    final selectedMonth = context.read<SelectedMonthCubit>().state;
-                    context.read<MonthlyBudgetCubit>().updateMonthlyBudget(newBudget: parsedValue, month: selectedMonth);
-                  }
-                },
-              ),
-            ],
+                  onChanged: (value) {
+                    final parsedValue = num.tryParse(value) ?? 0.0;
+                    if (parsedValue >= 0) {
+                      final selectedMonth = context.read<SelectedMonthCubit>().state;
+                      context.read<MonthlyBudgetCubit>().updateMonthlyBudget(newBudget: parsedValue, month: selectedMonth);
+                    }
+                  },
+                ),
+              ],
+            ),
           );
         }
         return const SizedBox.shrink();
