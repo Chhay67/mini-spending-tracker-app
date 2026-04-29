@@ -138,7 +138,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       ),
                       CategoriesDropdownButton(
                         onChanged: (category) {
-                          context.read<AddExpenseCubit>().updateAddExpense(category: category.name);
+                          context.read<AddExpenseCubit>().updateAddExpense(category: category.categoryName);
                         },
                       ),
                       CustomTextFormField(

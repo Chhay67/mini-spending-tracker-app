@@ -11,9 +11,9 @@ final class LoadCategoriesEvent extends CategoriesEvent {
 
 
 final class AddCategoryEvent extends CategoriesEvent {
-  final String categoryName;
+  final CategoryModel category;
 
-  const AddCategoryEvent({required this.categoryName});
+  const AddCategoryEvent({required this.category});
 }
 
 final class DeleteCategoryEvent extends CategoriesEvent {
@@ -22,7 +22,3 @@ final class DeleteCategoryEvent extends CategoriesEvent {
   const DeleteCategoryEvent({required this.categoryId});
 }
 
-
-final class SaveCategoriesEvent extends CategoriesEvent {
-  const SaveCategoriesEvent();
-}

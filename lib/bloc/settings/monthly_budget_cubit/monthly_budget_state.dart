@@ -11,12 +11,12 @@ final class MonthlyBudgetInitial extends MonthlyBudgetState {}
 final class MonthlyBudgetLoading extends MonthlyBudgetState {}
 
 final class MonthlyBudgetLoaded extends MonthlyBudgetState {
-  MonthlyBudgetLoaded({required this.data, this.saveState = const SaveInitial()});
+  MonthlyBudgetLoaded({required this.data, this.saveState = const ActionInitial()});
 
   final MonthlyBudgetModel data;
-  final SaveState saveState;
+  final ActionState saveState;
 
-  MonthlyBudgetLoaded copyWith({MonthlyBudgetModel? data, SaveState? saveState}) {
+  MonthlyBudgetLoaded copyWith({MonthlyBudgetModel? data, ActionState? saveState}) {
     return MonthlyBudgetLoaded(data: data ?? this.data, saveState: saveState ?? this.saveState);
   }
 

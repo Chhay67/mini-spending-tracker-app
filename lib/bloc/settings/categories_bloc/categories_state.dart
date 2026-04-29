@@ -15,16 +15,20 @@ final class CategoriesLoading extends CategoriesState {
 
 final class CategoriesLoaded extends CategoriesState {
   final List<CategoryModel> categories;
-  final SaveState saveState;
 
-  CategoriesLoaded({required this.categories, this.saveState = const SaveInitial()});
 
-  CategoriesLoaded copyWith({List<CategoryModel>? categories, SaveState? saveState}) {
-    return CategoriesLoaded(categories: categories ?? this.categories, saveState: saveState ?? this.saveState);
+  CategoriesLoaded({
+    required this.categories,
+  });
+
+  CategoriesLoaded copyWith({List<CategoryModel>? categories, }) {
+    return CategoriesLoaded(
+      categories: categories ?? this.categories,
+    );
   }
 
   @override
-  List<Object?> get props => [categories, saveState];
+  List<Object?> get props => [categories, ];
 }
 
 final class CategoriesError extends CategoriesState {

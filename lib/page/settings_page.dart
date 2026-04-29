@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mini_spend_tracker_app/bloc/settings/add_category_cubit/add_category_cubit.dart';
+import 'package:mini_spend_tracker_app/bloc/settings/delete_category_cubit/delete_category_cubit.dart';
 import 'package:mini_spend_tracker_app/core/utils/currency_format.dart';
 import 'package:mini_spend_tracker_app/core/utils/logger.dart';
 import 'package:mini_spend_tracker_app/core/widget/custom_text_form_field.dart';
@@ -9,13 +11,14 @@ import 'package:mini_spend_tracker_app/core/widget/default_card.dart';
 import '../bloc/selected_month_cubit/selected_month_cubit.dart';
 import '../bloc/settings/categories_bloc/categories_bloc.dart';
 import '../bloc/settings/monthly_budget_cubit/monthly_budget_cubit.dart';
-import '../core/state/save_state.dart';
+import '../core/state/action_state.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/app_padding.dart';
 import '../core/utils/app_snack_bar.dart';
 import '../core/utils/app_spacing.dart';
 import '../core/utils/app_validator.dart';
 import '../core/utils/responsive_utils.dart';
+import '../core/widget/custom_progress_indicator.dart';
 import '../core/widget/error_state_widget.dart';
 import '../init_dependencies.dart';
 import '../model/category_model.dart';
@@ -34,12 +37,27 @@ class SettingsPage extends StatelessWidget {
           create: (context) => serviceLocator<MonthlyBudgetCubit>()..loadMonthlyBudget(month: context.read<SelectedMonthCubit>().state),
         ),
         BlocProvider<CategoriesBloc>(create: (_) => serviceLocator<CategoriesBloc>()..add(const LoadCategoriesEvent())),
+        BlocProvider<AddCategoryCubit>(create: (_) => serviceLocator<AddCategoryCubit>()),
+        BlocProvider<DeleteCategoryCubit>(create: (_) => serviceLocator<DeleteCategoryCubit>()),
       ],
 
       child: MultiBlocListener(
         listeners: [
           BlocListener<SelectedMonthCubit, DateTime>(
             listener: (context, selectedMonth) => context.read<MonthlyBudgetCubit>().loadMonthlyBudget(month: selectedMonth),
+          ),
+          BlocListener<AddCategoryCubit, AddCategoryState>(
+            listener: (context, state) {
+              if (state is AddCategorySuccess) {
+                AppSnackBar.showSuccess(context, message: "${state.category.categoryName} added successfully");
+                context.read<CategoriesBloc>().add(AddCategoryEvent(category: state.category));
+                return;
+              }
+              if (state is AddCategoryError) {
+                AppSnackBar.showError(context, message: "Failed to add category: ${state.message}");
+                return;
+              }
+            },
           ),
         ],
         child: SingleChildScrollView(
@@ -94,12 +112,12 @@ class _MonthlyBudgetViewState extends State<_MonthlyBudgetView> {
         if (state is MonthlyBudgetLoaded) {
           final saveState = state.saveState;
 
-          if (saveState is SaveSuccess) {
+          if (saveState is ActionSuccess) {
             onLoadMonthlyBudget(context);
             AppSnackBar.showSuccess(context, message: "Monthly budget saved successfully");
             return;
           }
-          if (saveState is SaveError) {
+          if (saveState is ActionError) {
             AppSnackBar.showError(context, message: "Failed to save monthly budget: ${saveState.message}");
             return;
           }
@@ -115,7 +133,7 @@ class _MonthlyBudgetViewState extends State<_MonthlyBudgetView> {
         }
         if (state is MonthlyBudgetLoaded) {
           final data = state.data;
-          final isSaving = state.saveState is SaveLoading;
+          final isSaving = state.saveState is ActionLoading;
 
           return Form(
             key: _formKey,
@@ -126,7 +144,7 @@ class _MonthlyBudgetViewState extends State<_MonthlyBudgetView> {
                   autoValidateMode: AutovalidateMode.onUserInteraction,
                   labelTrailing: OutlinedButton(
                     onPressed: isSaving ? null : () => onSaveMonthlyBudget(context),
-                    child: isSaving ? Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator())) : Text("Save"),
+                    child: isSaving ? CustomProgressIndicator() : Text("Save"),
                   ),
                   hintText: "0.00",
                   initialValue: CurrencyFormat.number(data.monthlyBudget),
@@ -205,7 +223,7 @@ class _CategoriesViewState extends State<_CategoriesView> {
               // Check if the widget is still on screen before using context!
               if (!mounted) return;
               final newCategoryName = categoryNameController.text.trim();
-              context.read<CategoriesBloc>().add(AddCategoryEvent(categoryName: newCategoryName));
+              context.read<AddCategoryCubit>().addCategory(categoryName: newCategoryName);
               Navigator.of(dialogContext).pop();
             },
             child: const Text("Add"),
@@ -216,14 +234,14 @@ class _CategoriesViewState extends State<_CategoriesView> {
   }
 
   Future<void> onDeleteCategory(BuildContext context, CategoryModel category) async {
-    Logger.info("Delete category with id: ${category.categoryId} and name: ${category.name}");
+    Logger.info("Delete category with id: ${category.categoryId} and name: ${category.categoryName}");
     final minWidth = MediaQuery.of(context).size.width * 0.90;
     await showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         constraints: BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth, minWidth: minWidth),
         title: const Text("Delete Category"),
-        content: Text("Are you sure you want to delete the category \"${category.name}\"? This action cannot be undone."),
+        content: Text("Are you sure you want to delete the category \"${category.categoryName}\"? This action cannot be undone."),
         actions: [
           OutlinedButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text("Cancel")),
           ElevatedButton(
@@ -231,7 +249,7 @@ class _CategoriesViewState extends State<_CategoriesView> {
             onPressed: () {
               // Check if the widget is still on screen before using context!
               if (!mounted) return;
-              context.read<CategoriesBloc>().add(DeleteCategoryEvent(categoryId: category.categoryId));
+              context.read<CategoriesBloc>().add(DeleteCategoryEvent(categoryId: category.categoryId!));
               Navigator.of(dialogContext).pop();
             },
             child: const Text("Delete"),
@@ -244,23 +262,7 @@ class _CategoriesViewState extends State<_CategoriesView> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<CategoriesBloc, CategoriesState>(
-      listener: (context, state) {
-        if (state is CategoriesLoaded) {
-          final saveState = state.saveState;
-          if (saveState is SaveLoading) {
-            return;
-          }
-          if (saveState is SaveSuccess) {
-            context.read<CategoriesBloc>().add(const LoadCategoriesEvent());
-            AppSnackBar.showSuccess(context, message: "Categories saved successfully");
-            return;
-          }
-          if (saveState is SaveError) {
-            AppSnackBar.showError(context, message: "Failed to save categories: ${saveState.message}");
-            return;
-          }
-        }
-      },
+      listener: (context, state) {},
       builder: (context, state) {
         if (state is CategoriesLoading || state is CategoriesInitial) {
           return const CategoriesShimmer();
@@ -270,29 +272,14 @@ class _CategoriesViewState extends State<_CategoriesView> {
           return ErrorStateWidget(message: state.message, onRetry: () => context.read<CategoriesBloc>().add(const LoadCategoriesEvent()));
         }
         if (state is CategoriesLoaded) {
-          final isSaving = state.saveState is SaveLoading;
           return Column(
             spacing: AppSpacing.defaultSpacing,
             children: [
               _CategoryHeaderButton(onAddCategory: () => onAddCategory(context)),
               _CategoriesListView<CategoryModel>(
                 onDeleteCategory: (category) => onDeleteCategory(context, category),
-                labelBuilder: (category) => category.name,
+                labelBuilder: (category) => category.categoryName,
                 categories: state.categories,
-              ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(minimumSize: Size(double.maxFinite, 52)),
-                  onPressed: isSaving
-                      ? null
-                      : () {
-                          context.read<CategoriesBloc>().add(const SaveCategoriesEvent());
-                        },
-                  child: isSaving
-                      ? Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator()))
-                      : Text("Save Categories"),
-                ),
               ),
             ],
           );
@@ -310,6 +297,7 @@ class _CategoryHeaderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth),
       child: Row(
@@ -318,12 +306,23 @@ class _CategoryHeaderButton extends StatelessWidget {
           Text(
             "Categories",
             textAlign: TextAlign.start,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.textPrimary),
+            style: textTheme.titleLarge?.copyWith(color: AppColors.textPrimary),
           ),
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(side: BorderSide(color: AppColors.primaryDark, width: 1)),
-            onPressed: onAddCategory,
-            child: Text("Add"),
+
+          BlocSelector<AddCategoryCubit, AddCategoryState, bool>(
+            selector: (state) {
+              if (state is AddCategoryLoading) {
+                return true;
+              }
+              return false;
+            },
+            builder: (context, isLoading) {
+              return OutlinedButton(
+                style: Theme.of(context).outlinedButtonTheme.style?.copyWith(backgroundColor: WidgetStateProperty.all(AppColors.surface)),
+                onPressed: isLoading ? null : onAddCategory,
+                child: isLoading ? CustomProgressIndicator() : Text("Add"),
+              );
+            },
           ),
         ],
       ),

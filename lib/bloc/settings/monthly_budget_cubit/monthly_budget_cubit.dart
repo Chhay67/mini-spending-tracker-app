@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:mini_spend_tracker_app/core/state/save_state.dart';
+import 'package:mini_spend_tracker_app/core/state/action_state.dart';
 import 'package:mini_spend_tracker_app/repository/settings_repository.dart';
 
 import '../../../core/utils/logger.dart';
@@ -42,11 +42,11 @@ class MonthlyBudgetCubit extends Cubit<MonthlyBudgetState> {
     final currentState = state;
     if (currentState is MonthlyBudgetLoaded) {
       try {
-        emit(currentState.copyWith(saveState: const SaveLoading()));
+        emit(currentState.copyWith(saveState: const ActionLoading()));
         await repository.saveMonthlyBudget(monthlyBudget: currentState.data);
-        emit(currentState.copyWith(saveState: const SaveSuccess()));
+        emit(currentState.copyWith(saveState: const ActionSuccess()));
       } catch (error) {
-        emit(currentState.copyWith(saveState: SaveError(message: error.toString())));
+        emit(currentState.copyWith(saveState: ActionError(message: error.toString())));
       }
     }
   }

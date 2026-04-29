@@ -22,7 +22,7 @@ class AppConfig {
 
   // static bool get isProduction => appFlavor == FlavorEnum.production;
   static const String baseUrl =
-      'https://script.google.com/macros/s/AKfycbxUpOhsDDy7jp5KWOM77gScm1cZS-3oljta_4ElJg1nfmObIZgJ5nzDoaf1YVkLV_dp/exec';
+      'https://script.google.com/macros/s/AKfycbwZ9QZ6ZosPyYg2Sl68ggjxs7pgPCOdUj7E-skgC1nSzDZ2v2uWNiGD2P-KWE8WAlDXQw/exec';
   static String get appName {
     switch (appFlavor) {
       case FlavorEnum.dev:

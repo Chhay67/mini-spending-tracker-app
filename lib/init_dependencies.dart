@@ -6,7 +6,9 @@ import 'api_service/settings_api_service.dart';
 import 'bloc/add_expense_cubit/add_expense_cubit.dart';
 import 'bloc/dashboard_bloc/dashboard_bloc.dart';
 import 'bloc/selected_month_cubit/selected_month_cubit.dart';
+import 'bloc/settings/add_category_cubit/add_category_cubit.dart';
 import 'bloc/settings/categories_bloc/categories_bloc.dart';
+import 'bloc/settings/delete_category_cubit/delete_category_cubit.dart';
 import 'bloc/settings/monthly_budget_cubit/monthly_budget_cubit.dart';
 import 'core/config/app_config.dart';
 import 'core/network/dio_client.dart';
@@ -43,6 +45,8 @@ Future<void> _registerBusinessCore() async {
     ..registerLazySingleton<SettingsRepository>(() => SettingsRepositoryImpl(settingsApiService: serviceLocator()))
     ..registerFactory<MonthlyBudgetCubit>(() => MonthlyBudgetCubit(repository: serviceLocator()))
     ..registerFactory<CategoriesBloc>(() => CategoriesBloc(repository: serviceLocator()))
+    ..registerFactory<AddCategoryCubit>(() => AddCategoryCubit(repository: serviceLocator()))
+    ..registerFactory<DeleteCategoryCubit>(() => DeleteCategoryCubit(repository: serviceLocator()))
     /// Add Expense
     ..registerLazySingleton<AddExpenseApiService>(() => AddExpenseApiServiceImpl(dioClient: serviceLocator()))
     ..registerLazySingleton<AddExpenseRepository>(() => AddExpenseRepositoryImpl(addExpenseApiService: serviceLocator()))

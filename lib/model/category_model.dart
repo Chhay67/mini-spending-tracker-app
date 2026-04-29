@@ -1,27 +1,51 @@
-class CategoryModel {
-  CategoryModel({required this.categoryId, required this.name, required this.color, required this.active});
+import 'package:equatable/equatable.dart';
+import 'package:mini_spend_tracker_app/core/state/action_state.dart';
 
-  final String categoryId;
-  final String name;
-  final String color;
+class CategoryModel extends Equatable {
+  const CategoryModel({
+    this.categoryId,
+    required this.categoryName,
+    this.color,
+    this.active = true,
+    this.createdAt,
+    this.updatedAt,
+    this.deleteState = const ActionInitial(),
+  });
+
+  final String? categoryId;
+  final String categoryName;
+  final String? color;
   final bool active;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  final ActionState deleteState;
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     return CategoryModel(
-      categoryId: json["categoryId"] ?? "",
-      name: json["name"] ?? "",
-      color: json["color"] ?? "",
-      active: json["active"] ?? false,
+      categoryId: json["category_id"],
+      categoryName: json["category_name"] ?? "",
+      color: json["color"],
+      active: json["active"] ?? true,
+      createdAt: DateTime.tryParse(json["created_at"] ?? ""),
+      updatedAt: DateTime.tryParse(json["updated_at"] ?? ""),
     );
   }
 
+  CategoryModel copyWith({String? categoryId, String? categoryName, bool? active,ActionState? deleteState}) {
+    return CategoryModel(
+      categoryId: categoryId ?? this.categoryId,
+      categoryName: categoryName ?? this.categoryName,
+      active: active ?? this.active,
+      deleteState: deleteState ?? this.deleteState,
+    );
+  }
 
-  Map<String, dynamic> toSaveJson() =>{
-    "name": name,
-    "active": true
-  };
+  Map<String, dynamic> toSaveJson() {
+    return {if (categoryId != null) "category_id": categoryId, "category_name": categoryName, "active": active};
+  }
 
-  Map<String, dynamic> toUpdateCategoryJson() => {"action": "updateCategory", "categoryId": categoryId, "name": name, "active": true};
-
-  Map<String, dynamic> toDeleteCategoryJson() => {"action": "deleteCategory", "categoryId": categoryId};
+  @override
+  // TODO: implement props
+  List<Object?> get props => [categoryId, categoryName, color, active, createdAt, updatedAt, deleteState];
 }

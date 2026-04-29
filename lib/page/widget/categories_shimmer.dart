@@ -25,7 +25,13 @@ class CategoriesShimmer extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.textPrimary),
               ),
               OutlinedButton(
-                style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primaryDark, width: 1)),
+                style: Theme
+                    .of(context)
+                    .outlinedButtonTheme
+                    .style
+                    ?.copyWith(
+                  backgroundColor: WidgetStateProperty.all(AppColors.surface),
+                ),
                 onPressed: null, // Disabled during loading
                 child: const Text("Add"),
               ),
@@ -82,16 +88,6 @@ class CategoriesShimmer extends StatelessWidget {
                 ),
               );
             },
-          ),
-        ),
-        
-        // Static Save Button
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(minimumSize: const Size(double.maxFinite, 52)),
-            onPressed: null,
-            child: const Text("Save Categories"),
           ),
         ),
       ],

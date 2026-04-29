@@ -19,7 +19,7 @@ class CategoriesDropdownButton extends StatelessWidget {
         final isError = state is CategoriesError;
         return CustomDropdownButton2<CategoryModel>(
           label: "category",
-          labelBuilder: (item) => item?.name ?? "Select category",
+          labelBuilder: (item) => item?.categoryName ?? "Select category",
           hintText: "Select category",
           isRequired: true,
           items: categories,
@@ -28,7 +28,7 @@ class CategoriesDropdownButton extends StatelessWidget {
           errorMessage: state is CategoriesError ? state.message : null,
           onRefresh: () async => context.read<CategoriesBloc>().add(const LoadCategoriesEvent()),
           onChanged: (category) {
-            Logger.info("Selected category: ${category.name}");
+            Logger.info("Selected category: ${category.categoryName}");
             onChanged?.call(category);
           },
         );

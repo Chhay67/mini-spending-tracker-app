@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mini_spend_tracker_app/core/state/save_state.dart';
+import 'package:mini_spend_tracker_app/core/state/action_state.dart';
 import 'package:mini_spend_tracker_app/core/utils/logger.dart';
 import 'package:mini_spend_tracker_app/model/add_expense_model.dart';
 
@@ -12,12 +12,12 @@ class AddExpenseCubit extends Cubit<AddExpenseState> {
   AddExpenseCubit({required this.repository}) : super(AddExpenseState());
 
   Future<void> addExpense() async {
-    emit(state.copyWith(saveState: SaveLoading()));
+    emit(state.copyWith(saveState: ActionLoading()));
     try {
       await repository.addExpense(addExpense: state.addExpense!);
-      emit(state.copyWith(saveState: SaveSuccess()));
+      emit(state.copyWith(saveState: ActionSuccess()));
     } catch (error) {
-      emit(state.copyWith(saveState: SaveError(message: error.toString())));
+      emit(state.copyWith(saveState: ActionError(message: error.toString())));
     }
   }
 

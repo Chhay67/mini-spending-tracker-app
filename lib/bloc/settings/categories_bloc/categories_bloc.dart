@@ -1,15 +1,16 @@
 import 'dart:async';
+import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mini_spend_tracker_app/repository/settings_repository.dart';
 
-import '../../../core/state/save_state.dart';
+import '../../../core/state/action_state.dart';
 import '../../../model/category_model.dart';
 
 part 'categories_event.dart';
-
 part 'categories_state.dart';
 
 class CategoriesBloc extends Bloc<CategoriesEvent, CategoriesState> {
@@ -18,7 +19,6 @@ class CategoriesBloc extends Bloc<CategoriesEvent, CategoriesState> {
   CategoriesBloc({required this.repository}) : super(CategoriesInitial()) {
     on<LoadCategoriesEvent>((_loadCategories));
     on<AddCategoryEvent>(_addCategory);
-    on<SaveCategoriesEvent>((_saveCategories));
     on<DeleteCategoryEvent>((_deleteCategory));
   }
 
@@ -32,40 +32,39 @@ class CategoriesBloc extends Bloc<CategoriesEvent, CategoriesState> {
     }
   }
 
-  FutureOr<void> _addCategory(AddCategoryEvent event, Emitter<CategoriesState> emit) {
+  FutureOr<void> _addCategory(AddCategoryEvent event, Emitter<CategoriesState> emit) async {
     final currentState = state;
     if (currentState is CategoriesLoaded) {
-      final currentCategories = currentState.categories;
-      final newCategory = CategoryModel(
-        name: event.categoryName,
-        categoryId: DateTime.now().millisecondsSinceEpoch.toString(),
-        color: '',
-        active: true,
-      );
-      final updatedCategories = List<CategoryModel>.from(currentCategories)..insert(0, newCategory);
-      emit(CategoriesLoaded(categories: updatedCategories));
+      final updatedCategories = List<CategoryModel>.from(currentState.categories)..insert(0, event.category);
+      emit(currentState.copyWith(categories: updatedCategories));
     }
   }
 
-  FutureOr<void> _saveCategories(SaveCategoriesEvent event, Emitter<CategoriesState> emit) async {
+  FutureOr<void> _deleteCategory(DeleteCategoryEvent event, Emitter<CategoriesState> emit) async {
     final currentState = state;
     if (currentState is CategoriesLoaded) {
+      final categoryToDelete = currentState.categories.firstWhereOrNull((category) => category.categoryId == event.categoryId);
+      if (categoryToDelete == null) return;
+      final updatedCategories = currentState.categories.map((category) {
+        if (category.categoryId == event.categoryId) {
+          return category.copyWith(deleteState: const ActionLoading());
+        }
+        return category;
+      }).toList();
+      emit(currentState.copyWith(categories: updatedCategories));
       try {
-        emit(currentState.copyWith(saveState: const SaveLoading()));
-        await repository.saveCategories(categories: currentState.categories);
-        emit(currentState.copyWith(saveState: const SaveSuccess()));
+        await repository.deleteCategory(categoryId: event.categoryId);
+        final updatedCategories = currentState.categories.where((category) => category.categoryId != event.categoryId).toList();
+        emit(currentState.copyWith(categories: updatedCategories));
       } catch (error) {
-        emit(currentState.copyWith(saveState: SaveError(message: error.toString())));
+        final updatedCategories = currentState.categories.map((category) {
+          if (category.categoryId == event.categoryId) {
+            return category.copyWith(deleteState: ActionError(message: error.toString()));
+          }
+          return category;
+        }).toList();
+        emit(currentState.copyWith(categories: updatedCategories));
       }
-    }
-  }
-
-  FutureOr<void> _deleteCategory(DeleteCategoryEvent event, Emitter<CategoriesState> emit) async{
-    final currentState = state;
-    if (currentState is CategoriesLoaded) {
-      final currentCategories = currentState.categories;
-      final updatedCategories = currentCategories.where((category) => category.categoryId != event.categoryId).toList();
-      emit(CategoriesLoaded(categories: updatedCategories));
     }
   }
 }
