@@ -1,11 +1,23 @@
 part of 'delete_category_cubit.dart';
 
-class DeleteCategoryState extends Equatable {
-  const DeleteCategoryState({this.deleteCategoryStates = const []});
+@immutable
+sealed class DeleteCategoryState {}
 
-  final List<({ActionState action, String categoryId})> deleteCategoryStates;
+final class DeleteCategoryInitial extends DeleteCategoryState {}
 
-  @override
-  // TODO: implement props
-  List<Object?> get props => [deleteCategoryStates];
+
+final class DeleteCategoryLoading extends DeleteCategoryState{}
+
+
+final class DeleteCategorySuccess extends DeleteCategoryState{
+
+  final CategoryModel categoryToDelete;
+
+  DeleteCategorySuccess({required this.categoryToDelete});
+}
+
+final class DeleteCategoryError extends DeleteCategoryState{
+  DeleteCategoryError({required this.errorMessage});
+
+  final String errorMessage;
 }

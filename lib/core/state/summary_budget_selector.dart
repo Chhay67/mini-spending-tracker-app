@@ -16,12 +16,15 @@ class SummaryBudgetLoaded extends SummaryBudgetSelector {
     required this.usagePercent,
     required this.monthlyBudget,
     required this.totalSpent,
+    required this.budgetUsageColor,
   });
 
   final num remainingBudget;
   final num usagePercent;
   final num monthlyBudget;
   final num totalSpent;
+  final String budgetUsageColor;
+
 }
 
 class SummaryBudgetError extends SummaryBudgetSelector {

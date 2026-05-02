@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:mini_spend_tracker_app/core/state/action_state.dart';
 import 'package:mini_spend_tracker_app/repository/settings_repository.dart';
 
-import '../../../core/utils/logger.dart';
 import '../../../model/monthly_budget_model.dart';
 
 part 'monthly_budget_state.dart';
@@ -27,12 +26,10 @@ class MonthlyBudgetCubit extends Cubit<MonthlyBudgetState> {
   }
 
   void updateMonthlyBudget({required DateTime month, required num newBudget}) {
-    Logger.info("Updating monthly budget for month: ${DateFormat('yyyy-MM').format(month)} with new budget: $newBudget");
     final currentState = state;
     if (currentState is MonthlyBudgetLoaded) {
       final currentMonthlyBudget = currentState.data;
-      final monthFormat = DateFormat('yyyy-MM').format(month);
-      final updatedMonthlyBudget = currentMonthlyBudget.copyWith(month: monthFormat, monthlyBudget: newBudget);
+      final updatedMonthlyBudget = currentMonthlyBudget.copyWith(monthKey: month, budgetAmount: newBudget);
 
       emit(MonthlyBudgetLoaded(data: updatedMonthlyBudget));
     }

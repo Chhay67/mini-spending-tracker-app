@@ -7,7 +7,6 @@ import 'package:mini_spend_tracker_app/core/widget/default_card.dart';
 
 import '../bloc/nav_bar_cubit/nav_bar_cubit.dart';
 import '../bloc/selected_month_cubit/selected_month_cubit.dart';
-import '../core/enum/status_enum.dart';
 import '../core/state/daily_insight_selector.dart';
 import '../core/state/summary_budget_selector.dart';
 import '../core/theme/app_colors.dart';
@@ -128,10 +127,11 @@ class _SummaryBudgetView extends StatelessWidget {
 
         if (state is DashboardLoaded) {
           return SummaryBudgetLoaded(
-            remainingBudget: state.data.remainingBudget,
-            usagePercent: state.data.usagePercent,
+            remainingBudget: state.data.remainingBalance,
+            usagePercent: state.data.budgetUsagePercent,
             monthlyBudget: state.data.monthlyBudget,
             totalSpent: state.data.totalSpent,
+            budgetUsageColor: state.data.budgetUsageColor,
           );
         }
         return const SummaryBudgetInitial();
@@ -162,7 +162,7 @@ class _SummaryBudgetView extends StatelessWidget {
               ),
               LinearProgressIndicator(
                 value: state.usagePercent / 100,
-                color: AppColors.primaryDark,
+                color: AppColors.hexToColor(state.budgetUsageColor),
                 backgroundColor: AppColors.primaryLight,
                 minHeight: 6,
                 borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -226,6 +226,8 @@ class _DailyInsightView extends StatelessWidget {
             actualPerDay: state.data.actualPerDay,
             budgetPerDay: state.data.budgetPerDay,
             status: state.data.status,
+            statusColor: state.data.statusColor,
+            statusLabel: state.data.statusLabel,
           );
         }
         return const DailyInsightInitial();
@@ -241,7 +243,6 @@ class _DailyInsightView extends StatelessWidget {
           );
         }
         if (state is DailyInsightLoaded) {
-          final statusX = DashboardStatusX.fromString(state.status);
           return DefaultCard(
             children: [
               Text(
@@ -294,8 +295,8 @@ class _DailyInsightView extends StatelessWidget {
                     children: [
                       TextSpan(text: "Status : "),
                       TextSpan(
-                        text: statusX.label,
-                        style: textTheme.titleLarge?.copyWith(color: statusX.color, fontWeight: FontWeight.bold),
+                        text: state.statusLabel,
+                        style: textTheme.titleLarge?.copyWith(color: AppColors.hexToColor(state.statusColor), fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),

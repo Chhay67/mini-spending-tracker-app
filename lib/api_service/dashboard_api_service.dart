@@ -15,14 +15,8 @@ class DashboardApiServiceImpl extends DashboardApiService {
   @override
   Future<DashboardModel> getDashboardData({required String month}) async {
     try {
-      final response = await dioClient.get(
-        "",
-        queryParameters: {
-          'action': 'dashboard',
-          'month': month,
-        }
-      );
-      return DashboardModel.fromJson(response.data);
+      final response = await dioClient.get("", queryParameters: {'action': 'getDashboardSummary', 'month': month});
+      return parseOrThrow<DashboardModel>(response: response, onSuccess: () => DashboardModel.fromJson(response.data['data']));
     } on DioException catch (error) {
       throw ServerException(error.toString(), code: error.response?.statusCode.toString());
     } catch (error) {

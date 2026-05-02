@@ -44,6 +44,7 @@ class CustomTextFormField extends StatelessWidget {
       this.prefixIcon,
     this.hintStyle,
     this.labelTrailing,
+    this.forceErrorText,
   });
 
   final String? label;
@@ -83,7 +84,7 @@ class CustomTextFormField extends StatelessWidget {
   final TextAlignVertical? textAlignVertical;
   final TextCapitalization textCapitalization;
   final bool isRequired;
-
+  final String? forceErrorText;
   final Widget? prefixIcon;
   @override
   Widget build(BuildContext context) {
@@ -162,6 +163,7 @@ class CustomTextFormField extends StatelessWidget {
           textInputAction: textInputAction,
           textAlignVertical: textAlignVertical,
           textCapitalization: textCapitalization,
+          forceErrorText: forceErrorText,
           decoration: InputDecoration(
             hintStyle: hintStyle ?? textTheme.bodySmall,
             border: OutlineInputBorder(

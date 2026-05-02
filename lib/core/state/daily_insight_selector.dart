@@ -14,12 +14,16 @@ class DailyInsightLoaded extends DailyInsightSelector {
   const DailyInsightLoaded({
     required this.budgetPerDay,
     required this.actualPerDay,
-    this.status,
+    required this.status,
+    required this.statusColor,
+    required this.statusLabel,
   });
 
   final num budgetPerDay;
   final num actualPerDay;
-  final String? status;
+  final String status;
+  final String statusLabel;
+  final String statusColor;
 }
 
 class DailyInsightError extends DailyInsightSelector {

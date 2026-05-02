@@ -1,6 +1,5 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
 import 'package:mini_spend_tracker_app/core/utils/logger.dart';
 
 import '../core/exception/app_exception.dart';
@@ -13,13 +12,9 @@ abstract class SettingsApiService {
 
   Future<void> savePostMonthlyBudget({required MonthlyBudgetModel monthlyBudget});
 
-  Future<void> saveGetMonthlyBudget({required MonthlyBudgetModel monthlyBudget});
-
   Future<List<CategoryModel>> getCategories();
 
-  Future<void> savePostCategories({required List<CategoryModel> categories});
 
-  Future<void> saveGetCategories({required List<CategoryModel> categories});
 
   Future<CategoryModel> addCategory({required String categoryName});
 
@@ -56,74 +51,42 @@ class SettingsApiServiceImpl extends SettingsApiService {
   @override
   Future<MonthlyBudgetModel> getMonthlyBudget({required String month}) async {
     try {
-      final response = await dioClient.get("", queryParameters: {'action': 'budget', 'month': month});
-      return MonthlyBudgetModel.fromJson(response.data);
-    } on DioException catch (error) {
-      throw ServerException(error.toString(), code: error.response?.statusCode.toString());
-    } catch (error) {
-      throw UnknownException(error.toString());
-    }
-  }
+      final response = await dioClient.get("", queryParameters: {'action': 'getBudget', 'month': month});
 
-  @override
-  Future<void> savePostCategories({required List<CategoryModel> categories}) async {
-    try {
-      final response = await dioClient.post(
-        "",
-        data: {
-          'action': 'saveCategories',
-          'data': jsonEncode({'categories': categories.map((category) => category.toSaveJson()).toList()}),
+      return parseOrThrow<MonthlyBudgetModel>(
+        response: response,
+        onSuccess: () {
+          return MonthlyBudgetModel.fromJson(response.data['data']);
         },
       );
-      return parseOrThrow<void>(response: response, onSuccess: () {});
     } on DioException catch (error) {
+      Logger.error("Error fetching getMonthlyBudget: ${error.toString()}");
       throw ServerException(error.toString(), code: error.response?.statusCode.toString());
     } catch (error) {
-      throw UnknownException(error.toString());
+      Logger.error("Unknown error fetching getMonthlyBudget: ${error.toString()}");
+      throw ServerException(error.toString());
     }
   }
 
-  @override
-  Future<void> saveGetCategories({required List<CategoryModel> categories}) async {
-    try {
-      final response = await dioClient.get(
-        "",
-        queryParameters: {
-          'action': 'saveCategories',
-          'data': jsonEncode({'categories': categories.map((category) => category.toSaveJson()).toList()}),
-        },
-      );
-      return parseOrThrow<void>(response: response, onSuccess: () {});
-    } on DioException catch (error) {
-      throw ServerException(error.toString(), code: error.response?.statusCode.toString());
-    } catch (error) {
-      throw UnknownException(error.toString());
-    }
-  }
 
-  @override
-  Future<void> saveGetMonthlyBudget({required MonthlyBudgetModel monthlyBudget}) async {
-    try {
-      await dioClient.get(
-        "",
-        queryParameters: {"action": "saveBudget", "month": monthlyBudget.month, "monthlyBudget": monthlyBudget.monthlyBudget},
-        options: Options(contentType: Headers.textPlainContentType, responseType: ResponseType.json),
-      );
-    } on DioException catch (error) {
-      throw ServerException(error.toString(), code: error.response?.statusCode.toString());
-    } catch (error) {
-      throw UnknownException(error.toString());
-    }
-  }
+
+
+
+
 
   @override
   Future<void> savePostMonthlyBudget({required MonthlyBudgetModel monthlyBudget}) async {
     try {
-      await dioClient.post(
+      if(monthlyBudget.monthKey == null) throw ServerException("monthKey is required for saving monthly budget");
+      final response = await dioClient.post(
         "",
-        data: jsonEncode({"action": "saveBudget", "month": monthlyBudget.month, "monthlyBudget": monthlyBudget.monthlyBudget}),
-        options: Options(contentType: Headers.textPlainContentType, responseType: ResponseType.json),
+        queryParameters: {
+          "action": "saveBudget",
+          "month_key": DateFormat('yyyy-MM').format(monthlyBudget.monthKey!),
+          "budget_amount": monthlyBudget.budgetAmount,
+        },
       );
+      return parseOrThrow<void>(response: response, onSuccess: () => true);
     } on DioException catch (error) {
       throw ServerException(error.toString(), code: error.response?.statusCode.toString());
     } catch (error) {
@@ -134,13 +97,7 @@ class SettingsApiServiceImpl extends SettingsApiService {
   @override
   Future<CategoryModel> addCategory({required String categoryName}) async {
     try {
-      final response = await dioClient.post(
-        "",
-        queryParameters: {
-          "action": "addCategory",
-          "category_name": categoryName,
-        },
-      );
+      final response = await dioClient.post("", queryParameters: {"action": "addCategory", "category_name": categoryName});
       return parseOrThrow<CategoryModel>(response: response, onSuccess: () => CategoryModel.fromJson(response.data['data']));
     } on DioException catch (error) {
       throw ServerException(error.toString(), code: error.response?.statusCode.toString());
@@ -152,10 +109,7 @@ class SettingsApiServiceImpl extends SettingsApiService {
   @override
   Future<void> deleteCategory({required String categoryId}) async {
     try {
-      final response = await dioClient.post("", queryParameters: {
-        "action": "deleteCategory",
-        "category_id": categoryId,
-      },);
+      final response = await dioClient.post("", queryParameters: {"action": "deleteCategory", "category_id": categoryId});
       return parseOrThrow<void>(response: response, onSuccess: () => true);
     } on DioException catch (error) {
       throw ServerException(error.toString(), code: error.response?.statusCode.toString());

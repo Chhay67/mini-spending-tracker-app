@@ -8,8 +8,8 @@ final class AddCategoryInitial extends AddCategoryState {}
 final class AddCategoryLoading extends AddCategoryState {}
 
 final class AddCategorySuccess extends AddCategoryState {
-  final CategoryModel category;
-  AddCategorySuccess({required this.category});
+  final CategoryModel categoryToAdd;
+  AddCategorySuccess({required this.categoryToAdd});
 }
 
 final class AddCategoryError extends AddCategoryState {

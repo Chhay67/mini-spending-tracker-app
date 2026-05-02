@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 import '../api_service/settings_api_service.dart';
 import '../model/category_model.dart';
 import '../model/monthly_budget_model.dart';
@@ -11,7 +9,6 @@ abstract class SettingsRepository {
 
   Future<List<CategoryModel>> getCategories();
 
-  Future<void> saveCategories({required List<CategoryModel> categories});
 
   Future<CategoryModel> addCategory({required String categoryName});
   Future<void> deleteCategory({required String categoryId});
@@ -33,19 +30,10 @@ class SettingsRepositoryImpl extends SettingsRepository {
     return await settingsApiService.getMonthlyBudget(month: month);
   }
 
-  @override
-  Future<void> saveCategories({required List<CategoryModel> categories}) async {
-    if (kIsWeb) {
-      return await settingsApiService.saveGetCategories(categories: categories);
-    }
-    return await settingsApiService.savePostCategories(categories: categories);
-  }
+
 
   @override
   Future<void> saveMonthlyBudget({required MonthlyBudgetModel monthlyBudget}) async{
-    // if (kIsWeb) {
-    //   return await settingsApiService.saveGetMonthlyBudget(monthlyBudget: monthlyBudget);
-    // }
     return await settingsApiService.savePostMonthlyBudget(monthlyBudget: monthlyBudget);
   }
 

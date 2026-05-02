@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mini_spend_tracker_app/bloc/settings/add_category_cubit/add_category_cubit.dart';
 import 'package:mini_spend_tracker_app/bloc/settings/delete_category_cubit/delete_category_cubit.dart';
 import 'package:mini_spend_tracker_app/core/utils/currency_format.dart';
@@ -49,13 +50,22 @@ class SettingsPage extends StatelessWidget {
           BlocListener<AddCategoryCubit, AddCategoryState>(
             listener: (context, state) {
               if (state is AddCategorySuccess) {
-                AppSnackBar.showSuccess(context, message: "${state.category.categoryName} added successfully");
-                context.read<CategoriesBloc>().add(AddCategoryEvent(category: state.category));
+                AppSnackBar.showSuccess(context, message: "${state.categoryToAdd.categoryName} added successfully");
+                context.read<CategoriesBloc>().add(AddCategoryEvent(category: state.categoryToAdd));
                 return;
               }
               if (state is AddCategoryError) {
                 AppSnackBar.showError(context, message: "Failed to add category: ${state.message}");
                 return;
+              }
+            },
+          ),
+          BlocListener<DeleteCategoryCubit, DeleteCategoryState>(
+            listener: (context, state) {
+              if (state is DeleteCategorySuccess) {
+                context.read<CategoriesBloc>().add(DeleteCategoryEvent(categoryId: state.categoryToDelete.categoryId!));
+                context.pop();
+                AppSnackBar.showSuccess(context, message: "${state.categoryToDelete.categoryName} deleted successfully.");
               }
             },
           ),
@@ -134,7 +144,7 @@ class _MonthlyBudgetViewState extends State<_MonthlyBudgetView> {
         if (state is MonthlyBudgetLoaded) {
           final data = state.data;
           final isSaving = state.saveState is ActionLoading;
-
+          Logger.info("Loaded monthly budget for month: ${data.monthKey} with amount: ${data.budgetAmount}");
           return Form(
             key: _formKey,
             child: DefaultCard(
@@ -147,7 +157,7 @@ class _MonthlyBudgetViewState extends State<_MonthlyBudgetView> {
                     child: isSaving ? CustomProgressIndicator() : Text("Save"),
                   ),
                   hintText: "0.00",
-                  initialValue: CurrencyFormat.number(data.monthlyBudget),
+                  initialValue: CurrencyFormat.number(data.budgetAmount),
                   style: textTheme.titleMedium?.copyWith(fontSize: 24),
                   hintStyle: textTheme.labelSmall?.copyWith(fontSize: 24),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
@@ -181,7 +191,7 @@ class _CategoriesView extends StatefulWidget {
 }
 
 class _CategoriesViewState extends State<_CategoriesView> {
-  final formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController categoryNameController = TextEditingController();
 
   @override
@@ -193,15 +203,13 @@ class _CategoriesViewState extends State<_CategoriesView> {
   Future<void> onAddCategory(BuildContext context) async {
     Logger.info("Add category button pressed");
     categoryNameController.clear();
-
-    final minWidth = MediaQuery.of(context).size.width * 0.90;
     await showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        constraints: BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth, minWidth: minWidth),
+        constraints: BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth),
         title: const Text("Add Category"),
         content: Form(
-          key: formKey,
+          key: _formKey,
           child: CustomTextFormField(
             label: "Category Name",
             hintText: "e.g. Food, Transport, etc.",
@@ -218,7 +226,7 @@ class _CategoriesViewState extends State<_CategoriesView> {
           OutlinedButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text("Cancel")),
           ElevatedButton(
             onPressed: () {
-              if (!formKey.currentState!.validate()) return;
+              if (!_formKey.currentState!.validate()) return;
 
               // Check if the widget is still on screen before using context!
               if (!mounted) return;
@@ -235,34 +243,72 @@ class _CategoriesViewState extends State<_CategoriesView> {
 
   Future<void> onDeleteCategory(BuildContext context, CategoryModel category) async {
     Logger.info("Delete category with id: ${category.categoryId} and name: ${category.categoryName}");
-    final minWidth = MediaQuery.of(context).size.width * 0.90;
+
+    final deleteCubit = context.read<DeleteCategoryCubit>();
     await showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        constraints: BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth, minWidth: minWidth),
-        title: const Text("Delete Category"),
-        content: Text("Are you sure you want to delete the category \"${category.categoryName}\"? This action cannot be undone."),
-        actions: [
-          OutlinedButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text("Cancel")),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () {
-              // Check if the widget is still on screen before using context!
-              if (!mounted) return;
-              context.read<CategoriesBloc>().add(DeleteCategoryEvent(categoryId: category.categoryId!));
-              Navigator.of(dialogContext).pop();
+      barrierDismissible: false,
+      useSafeArea: true,
+      builder: (dialogContext) {
+        return BlocProvider.value(
+          value: deleteCubit,
+          child: BlocBuilder<DeleteCategoryCubit, DeleteCategoryState>(
+            builder: (context, state) {
+              final isLoading = state is DeleteCategoryLoading;
+              final isError = state is DeleteCategoryError;
+              return Dialog(
+                constraints: BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppPadding.defaultPadding),
+                  child: Column(
+                    spacing: AppPadding.defaultPadding,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text("Delete Category", style: Theme.of(context).textTheme.titleLarge),
+                      if (isError) const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+                      Text(
+                        isError
+                            ? state.errorMessage
+                            : "Are you sure you want to delete the category \"${category.categoryName}\"? This action cannot be undone.",
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: isError ? AppColors.error : AppColors.textSecondary),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        spacing: AppSpacing.defaultSpacing,
+                        children: [
+                          OutlinedButton(
+                            onPressed: isLoading ? null : () => Navigator.of(dialogContext).pop(),
+                            child: const Text("Cancel"),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    context.read<DeleteCategoryCubit>().deleteCategory(categoryToDelete: category);
+                                  },
+                            child: isLoading ? const CustomProgressIndicator() : const Text("Delete"),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
             },
-            child: const Text("Delete"),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<CategoriesBloc, CategoriesState>(
-      listener: (context, state) {},
+    return BlocBuilder<CategoriesBloc, CategoriesState>(
       builder: (context, state) {
         if (state is CategoriesLoading || state is CategoriesInitial) {
           return const CategoriesShimmer();

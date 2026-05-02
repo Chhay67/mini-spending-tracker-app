@@ -23,4 +23,16 @@ class AppColors {
   // Status colors
   static const Color success       = Color(0xFF27AE60);
   static const Color  error         = Color(0xFFE53935);
+
+
+  static Color hexToColor(String hex) {
+    final buffer = StringBuffer();
+
+    if (hex.length == 6 || hex.length == 7) {
+      buffer.write('ff'); // add opacity if missing
+    }
+
+    buffer.write(hex.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
 }
