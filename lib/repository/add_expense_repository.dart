@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 
 import '../api_service/add_expense_api_service.dart';
 import '../model/add_expense_model.dart';
@@ -14,9 +13,6 @@ class AddExpenseRepositoryImpl extends AddExpenseRepository {
 
   @override
   Future<void> addExpense({required AddExpenseModel addExpense}) async {
-    if (kIsWeb) {
-      return await addExpenseApiService.addExpenseGetMethod(addExpense: addExpense);
-    }
     return await addExpenseApiService.addExpensePostMethod(addExpense: addExpense);
   }
 }

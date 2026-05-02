@@ -56,6 +56,9 @@ class SettingsApiServiceImpl extends SettingsApiService {
       return parseOrThrow<MonthlyBudgetModel>(
         response: response,
         onSuccess: () {
+          if(response.data['data'] == null) {
+            return MonthlyBudgetModel.empty();
+          }
           return MonthlyBudgetModel.fromJson(response.data['data']);
         },
       );

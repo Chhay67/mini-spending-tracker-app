@@ -7,9 +7,10 @@ import '../../core/widget/custom_dropdown_button2.dart';
 import '../../model/category_model.dart';
 
 class CategoriesDropdownButton extends StatelessWidget {
-  const CategoriesDropdownButton({super.key, this.onChanged});
+  const CategoriesDropdownButton({super.key, this.onChanged,this.isReset = false});
 
   final void Function(CategoryModel category)? onChanged;
+  final bool isReset;
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<CategoriesBloc, CategoriesState>(
@@ -25,6 +26,7 @@ class CategoriesDropdownButton extends StatelessWidget {
           items: categories,
           isLoading: isLoading,
           isError: isError,
+          isReset: isReset,
           errorMessage: state is CategoriesError ? state.message : null,
           onRefresh: () async => context.read<CategoriesBloc>().add(const LoadCategoriesEvent()),
           onChanged: (category) {

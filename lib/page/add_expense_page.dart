@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mini_spend_tracker_app/bloc/add_expense_cubit/add_expense_cubit.dart';
 import 'package:mini_spend_tracker_app/core/utils/app_padding.dart';
+import 'package:mini_spend_tracker_app/core/utils/app_snack_bar.dart';
 import 'package:mini_spend_tracker_app/core/utils/logger.dart';
+import 'package:mini_spend_tracker_app/core/widget/custom_progress_indicator.dart';
 import 'package:mini_spend_tracker_app/core/widget/default_card.dart';
 import 'package:mini_spend_tracker_app/init_dependencies.dart';
 import 'package:mini_spend_tracker_app/page/widget/categories_dropdown_button.dart';
-
-import '../bloc/add_expense_cubit/add_expense_state.dart';
 import '../bloc/settings/categories_bloc/categories_bloc.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/app_spacing.dart';
@@ -25,27 +25,40 @@ class AddExpensePage extends StatefulWidget {
 }
 
 class _AddExpensePageState extends State<AddExpensePage> {
-  final _formKey = GlobalKey<FormState>();
-
-  late final TextEditingController _dateController;
-
-  @override
-  void initState() {
-    _dateController = TextEditingController(text: DateFormater.formatDate(DateTime.now()));
-    super.initState();
-  }
-
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final TextEditingController noteController = TextEditingController();
+  final TextEditingController amountController = TextEditingController();
+  final TextEditingController dateController = TextEditingController(text: DateFormater.formatDate(DateTime.now()));
+  String? _selectedCategoryId;
+  DateTime _selectedDate = DateTime.now();
   @override
   void dispose() {
-    _dateController.dispose();
+    amountController.dispose();
+    noteController.dispose();
+    dateController.dispose();
     super.dispose();
   }
 
   void _onSaveExpense({required BuildContext context}) {
-    if (!_formKey.currentState!.validate()) {
+    if (!formKey.currentState!.validate()) {
       return;
     }
-    context.read<AddExpenseCubit>().addExpense();
+
+    context.read<AddExpenseCubit>().addExpense(
+      amount: num.parse(amountController.text),
+      date: _selectedDate,
+      categoryId: _selectedCategoryId ?? "",
+      note: noteController.text.isEmpty ? null : noteController.text,
+    );
+  }
+
+  void _resetForm() {
+    formKey.currentState?.reset();
+    noteController.clear();
+    amountController.clear();
+    dateController.text = DateFormater.formatDate(DateTime.now());
+    _selectedCategoryId = null;
+    _selectedDate = DateTime.now();
   }
 
   @override
@@ -59,11 +72,24 @@ class _AddExpensePageState extends State<AddExpensePage> {
         BlocProvider(create: (context) => serviceLocator<AddExpenseCubit>()),
       ],
       child: BlocConsumer<AddExpenseCubit, AddExpenseState>(
-        listener: (context, state) {},
+        listener: (context, state) {
+          if (state is AddExpenseSuccess) {
+            _resetForm();
+            AppSnackBar.showSuccess(context, message: "Expense added successfully");
+            return;
+          }
+          if (state is AddExpenseError) {
+            AppSnackBar.showError(context, message: "Failed to add expense: ${state.message}");
+            return;
+          }
+        },
+
         builder: (context, state) {
-          final expenseData = state.addExpense;
+          final isSaveSuccess = state is AddExpenseSuccess;
+          final isSaving = state is AddExpenseLoading;
+
           return Form(
-            key: _formKey,
+            key: formKey,
             child: SingleChildScrollView(
               padding: AppPadding.all,
               child: Column(
@@ -81,14 +107,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
                     children: [
                       Text("Amount", style: textTheme.titleMedium),
                       TextFormField(
-                        initialValue: expenseData?.amount != null ? expenseData!.amount.toString() : null,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
-                        // Only digits and a single decimal point are accepted
                         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
                         style: textTheme.displayLarge,
                         validator: AppValidator.amount,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        autovalidateMode: AutovalidateMode.disabled,
                         textAlign: TextAlign.center,
+                        controller: amountController,
                         decoration: InputDecoration(
                           filled: true,
                           hintText: "0.00",
@@ -109,13 +134,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
                             borderSide: BorderSide(color: AppColors.error, width: 1),
                           ),
                         ),
-                        onChanged: (value) {
-                          if (value.isEmpty) return;
-                          final amount = double.tryParse(value);
-                          if (amount != null) {
-                            context.read<AddExpenseCubit>().updateAddExpense(amount: amount);
-                          }
-                        },
                       ),
                       Divider(color: AppColors.primaryLight, thickness: 1),
                       CustomTextFormField(
@@ -124,21 +142,24 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         readOnly: true,
                         showCursor: true,
                         enabled: false,
-                        controller: _dateController,
                         isRequired: true,
+
+                        controller: dateController,
                         onTap: () async {
                           Logger.info("Date field tapped");
-                          final selectedDate = await DatePicker.showDatePickerDialog(context, initialDate: expenseData?.date);
-                          if (selectedDate != null && context.mounted) {
-                            _dateController.text = DateFormater.formatDate(selectedDate);
-                            context.read<AddExpenseCubit>().updateAddExpense(date: selectedDate);
+                          final selectedNewDate = await DatePicker.showDatePickerDialog(context, initialDate: _selectedDate);
+                          if (selectedNewDate != null && context.mounted) {
+                            dateController.text = DateFormater.formatDate(selectedNewDate);
+                            _selectedDate = selectedNewDate;
                           }
                         },
                         suffixIcon: Icon(Icons.calendar_month_outlined, color: AppColors.navUnselected),
                       ),
                       CategoriesDropdownButton(
+                        isReset: isSaveSuccess,
                         onChanged: (category) {
-                          context.read<AddExpenseCubit>().updateAddExpense(category: category.categoryName);
+                          if (category.categoryId == null) return;
+                          _selectedCategoryId = category.categoryId;
                         },
                       ),
                       CustomTextFormField(
@@ -146,20 +167,17 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         hintText: "Add a note about this expense...",
                         minLines: 4,
                         maxLines: 4,
-                        initialValue: expenseData?.note,
-                        onChanged: (note) {
-                          if (note.isEmpty) return;
-                          context.read<AddExpenseCubit>().updateAddExpense(note: note);
-                        },
+                        controller: noteController,
                       ),
                       Divider(color: AppColors.primaryLight, thickness: 1),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: ElevatedButton(
-                          style: theme.elevatedButtonTheme.style,
-                          onPressed: () => _onSaveExpense(context: context),
-                          child: Text("Save Expense"),
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ElevatedButton(
+                            onPressed: isSaving ? null : () => _onSaveExpense(context: context),
+                            child: isSaving ? const CustomProgressIndicator() : Text("Save Expense"),
+                          ),
+                        ],
                       ),
                     ],
                   ),

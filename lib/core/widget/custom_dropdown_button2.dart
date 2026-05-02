@@ -24,6 +24,7 @@ class CustomDropdownButton2<T> extends StatefulWidget {
     this.isError = false,
     this.errorMessage,
     this.onRefresh,
+    this.isReset = false,
   });
 
   final List<T> items;
@@ -57,6 +58,8 @@ class CustomDropdownButton2<T> extends StatefulWidget {
 
   final Future<void> Function()? onRefresh;
 
+  final bool isReset;
+
   @override
   State<CustomDropdownButton2<T>> createState() =>
       _CustomDropdownButton2State<T>();
@@ -84,6 +87,9 @@ class _CustomDropdownButton2State<T>
         !widget.items.contains(_valueNotifier.value)) {
       _valueNotifier.value = null;
     }
+      if (widget.isReset && !oldWidget.isReset) {
+        _valueNotifier.value = null;
+      }
   }
 
   @override

@@ -32,6 +32,19 @@ class MonthlyBudgetModel extends Equatable {
       updatedAt: DateTime.tryParse(json["updated_at"] ?? ""),
     );
   }
+  factory MonthlyBudgetModel.empty() {
+    return MonthlyBudgetModel(
+      budgetId: "",
+      monthKey: null,
+      year: 0,
+      month: 0,
+      budgetAmount: 0,
+      currency: "",
+      createdAt: null,
+      updatedAt: null,
+    );
+  }
+
 
   MonthlyBudgetModel copyWith({
     String? budgetId,
