@@ -7,6 +7,8 @@ abstract class SettingsRepository {
 
   Future<void> saveMonthlyBudget({required MonthlyBudgetModel monthlyBudget});
 
+  Future<List<MonthlyBudgetModel>> getAllMonthlyBudgets();
+
   Future<List<CategoryModel>> getCategories();
 
 
@@ -45,5 +47,10 @@ class SettingsRepositoryImpl extends SettingsRepository {
   @override
   Future<void> deleteCategory({required String categoryId}) async{
    return await settingsApiService.deleteCategory(categoryId: categoryId);
+  }
+
+  @override
+  Future<List<MonthlyBudgetModel>> getAllMonthlyBudgets()async {
+    return await settingsApiService.getAllMonthlyBudgets();
   }
 }

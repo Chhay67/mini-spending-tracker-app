@@ -12,9 +12,9 @@ abstract class SettingsApiService {
 
   Future<void> savePostMonthlyBudget({required MonthlyBudgetModel monthlyBudget});
 
+  Future<List<MonthlyBudgetModel>> getAllMonthlyBudgets();
+
   Future<List<CategoryModel>> getCategories();
-
-
 
   Future<CategoryModel> addCategory({required String categoryName});
 
@@ -56,7 +56,7 @@ class SettingsApiServiceImpl extends SettingsApiService {
       return parseOrThrow<MonthlyBudgetModel>(
         response: response,
         onSuccess: () {
-          if(response.data['data'] == null) {
+          if (response.data['data'] == null) {
             return MonthlyBudgetModel.empty();
           }
           return MonthlyBudgetModel.fromJson(response.data['data']);
@@ -71,16 +71,10 @@ class SettingsApiServiceImpl extends SettingsApiService {
     }
   }
 
-
-
-
-
-
-
   @override
   Future<void> savePostMonthlyBudget({required MonthlyBudgetModel monthlyBudget}) async {
     try {
-      if(monthlyBudget.monthKey == null) throw ServerException("monthKey is required for saving monthly budget");
+      if (monthlyBudget.monthKey == null) throw ServerException("monthKey is required for saving monthly budget");
       final response = await dioClient.post(
         "",
         queryParameters: {
@@ -114,6 +108,26 @@ class SettingsApiServiceImpl extends SettingsApiService {
     try {
       final response = await dioClient.post("", queryParameters: {"action": "deleteCategory", "category_id": categoryId});
       return parseOrThrow<void>(response: response, onSuccess: () => true);
+    } on DioException catch (error) {
+      throw ServerException(error.toString(), code: error.response?.statusCode.toString());
+    } catch (error) {
+      throw ServerException(error.toString());
+    }
+  }
+
+  @override
+  Future<List<MonthlyBudgetModel>> getAllMonthlyBudgets() async {
+    try {
+      final response = await dioClient.get("", queryParameters: {'action': 'getAllBudgets'});
+
+      return parseOrThrow<List<MonthlyBudgetModel>>(
+        response: response,
+        onSuccess: () {
+          final responseData = response.data as Map<String, dynamic>;
+          final List<dynamic> list = responseData['data'] as List<dynamic>;
+          return list.map((item) => MonthlyBudgetModel.fromJson(item as Map<String, dynamic>)).toList();
+        },
+      );
     } on DioException catch (error) {
       throw ServerException(error.toString(), code: error.response?.statusCode.toString());
     } catch (error) {

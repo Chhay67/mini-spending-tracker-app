@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:mini_spend_tracker_app/bloc/all_monthly_budgets_cubit/all_monthly_budgets_cubit.dart';
 import 'package:mini_spend_tracker_app/bloc/delete_transaction_cubit/delete_transaction_cubit.dart';
 
 import 'api_service/add_expense_api_service.dart';
@@ -59,5 +60,7 @@ Future<void> _registerBusinessCore() async {
     ..registerLazySingleton<TransactionsApiService>(() => TransactionsApiServiceImpl(dioClient: serviceLocator()))
     ..registerLazySingleton<TransactionsRepository>(() => TransactionsRepositoryImpl(transactionsApiService: serviceLocator()))
     ..registerFactory<TransactionsBloc>(() => TransactionsBloc(repository: serviceLocator()))
-    ..registerFactory<DeleteTransactionCubit>(() => DeleteTransactionCubit(repository: serviceLocator()));
+    ..registerFactory<DeleteTransactionCubit>(() => DeleteTransactionCubit(repository: serviceLocator()))
+      ..registerFactory<AllMonthlyBudgetsCubit>(() => AllMonthlyBudgetsCubit(repository: serviceLocator()));
+
 }

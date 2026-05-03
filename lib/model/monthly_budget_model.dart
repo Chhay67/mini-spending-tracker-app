@@ -10,9 +10,11 @@ class MonthlyBudgetModel extends Equatable {
     required this.currency,
     required this.createdAt,
     required this.updatedAt,
+    required this.monthLabel,
   });
   final String budgetId;
   final DateTime? monthKey;
+  final String monthLabel;
   final num year;
   final num month;
   final num budgetAmount;
@@ -24,6 +26,7 @@ class MonthlyBudgetModel extends Equatable {
     return MonthlyBudgetModel(
       budgetId: json["budget_id"] ?? "",
       monthKey: DateTime.tryParse(json["month_key"] ?? ""),
+      monthLabel : json["month_label"] ?? "",
       year: json["year"] ?? 0,
       month: json["month"] ?? 0,
       budgetAmount: json["budget_amount"] ?? 0,
@@ -42,6 +45,7 @@ class MonthlyBudgetModel extends Equatable {
       currency: "",
       createdAt: null,
       updatedAt: null,
+      monthLabel: "",
     );
   }
 
@@ -65,6 +69,7 @@ class MonthlyBudgetModel extends Equatable {
       currency: currency ?? this.currency,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      monthLabel: monthLabel,
     );
   }
 
@@ -79,5 +84,6 @@ class MonthlyBudgetModel extends Equatable {
     currency,
     createdAt,
     updatedAt,
+    monthLabel,
   ];
 }

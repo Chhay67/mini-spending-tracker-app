@@ -199,7 +199,7 @@ class _AddOrUpdateExpensePageState extends State<AddOrUpdateExpensePage> {
                         },
                         suffixIcon: Icon(Icons.calendar_month_outlined, color: AppColors.navUnselected),
                       ),
-                      CategoriesDropdownButton(
+                      CategoriesDropdownButtonFormField2(
                         isReset: isSaveSuccess,
                         initialCategory: _selectedCategoryId,
                         onChanged: (category) {

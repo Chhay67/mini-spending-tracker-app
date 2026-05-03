@@ -1,14 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:mini_spend_tracker_app/core/widget/custom_text_form_field.dart';
 import 'package:mini_spend_tracker_app/core/widget/pagination/pagination_list_view.dart';
 import 'package:mini_spend_tracker_app/init_dependencies.dart';
+import 'package:mini_spend_tracker_app/page/widget/categories_dropdown_button2.dart';
+import 'package:mini_spend_tracker_app/page/widget/month_budgets_filter_dropdown.dart';
 import 'package:mini_spend_tracker_app/page/widget/transactions_shimmer.dart';
 import 'package:mini_spend_tracker_app/route/app_navigation.dart';
 
+import '../bloc/all_monthly_budgets_cubit/all_monthly_budgets_cubit.dart';
 import '../bloc/delete_transaction_cubit/delete_transaction_cubit.dart';
 import '../bloc/selected_month_cubit/selected_month_cubit.dart';
+import '../bloc/settings/categories_bloc/categories_bloc.dart';
 import '../bloc/transactions_bloc/transactions_bloc.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/app_padding.dart';
@@ -23,11 +30,30 @@ import '../core/widget/pagination/scroll_notification_handler.dart';
 import '../model/transaction_model.dart';
 import '../route/routes.dart';
 
-class TransactionsPage extends StatelessWidget {
+class TransactionsPage extends StatefulWidget {
   const TransactionsPage({super.key});
 
+  @override
+  State<TransactionsPage> createState() => _TransactionsPageState();
+}
+
+class _TransactionsPageState extends State<TransactionsPage> {
+  Timer? _debounce;
+  String? _searchQuery;
+  String? _selectedCategoryId;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
   void onRetry(BuildContext context) {
-    context.read<TransactionsBloc>().add(LoadTransactionsEvent(month: context.read<SelectedMonthCubit>().state));
+    context.read<TransactionsBloc>().add(
+        LoadTransactionsEvent(month: context.read<SelectedMonthCubit>().state,
+            search: _searchQuery,
+            categoryId: _selectedCategoryId
+        ));
   }
 
   @override
@@ -41,12 +67,21 @@ class TransactionsPage extends StatelessWidget {
           create: (context) =>
               serviceLocator<TransactionsBloc>()..add(LoadTransactionsEvent(month: context.read<SelectedMonthCubit>().state)),
         ),
-        // BlocProvider<SubjectBloc>(
-        //   create: (context) => SubjectBloc(),
-        // ),
+        BlocProvider<CategoriesBloc>(create: (context) => serviceLocator<CategoriesBloc>()..add(LoadCategoriesEvent())),
+        BlocProvider<AllMonthlyBudgetsCubit>(create: (context) => serviceLocator<AllMonthlyBudgetsCubit>()..loadAllMonthlyBudgets()),
       ],
-      child: BlocSelector<TransactionsBloc, TransactionsState, bool>(
-        selector: (state) {
+      child: BlocListener<SelectedMonthCubit, DateTime>(
+        listener: (context, state) {
+          context.read<TransactionsBloc>().add(
+            LoadTransactionsEvent(
+              month: state,
+              search: _searchQuery,
+              categoryId: _selectedCategoryId,
+            ),
+          );
+        },
+        child: BlocSelector<TransactionsBloc, TransactionsState, bool>(
+          selector: (state) {
           if (state is TransactionsLoaded) {
             return state.pagination.hasNext;
           }
@@ -55,7 +90,13 @@ class TransactionsPage extends StatelessWidget {
         builder: (context, isHasMore) {
           return ScrollNotificationHandler(
             loadMore: () {
-              context.read<TransactionsBloc>().add(LoadMoreTransactionsEvent(month: context.read<SelectedMonthCubit>().state));
+              context.read<TransactionsBloc>().add(
+                LoadMoreTransactionsEvent(
+                  month: context.read<SelectedMonthCubit>().state,
+                  search: _searchQuery,
+                  categoryId: _selectedCategoryId,
+                ),
+              );
             },
             isHasMore: isHasMore,
             child: SingleChildScrollView(
@@ -68,6 +109,56 @@ class TransactionsPage extends StatelessWidget {
                     "History",
                     textAlign: TextAlign.start,
                     style: textTheme.displayLarge?.copyWith(color: AppColors.textPrimary),
+                  ),
+                  CustomTextFormField(
+                    prefixIcon: const Icon(Icons.search),
+                    hintText: "Search by category or note",
+                    onChanged: (value) {
+                      if (_debounce?.isActive ?? false) _debounce?.cancel();
+                      _debounce = Timer(const Duration(milliseconds: 500), () {
+                        _searchQuery = value.trim().isEmpty ? null : value.trim();
+                        context.read<TransactionsBloc>().add(
+                          LoadTransactionsEvent(month: context.read<SelectedMonthCubit>().state,
+                              search: _searchQuery,
+                              categoryId: _selectedCategoryId
+                          ),
+                        );
+                      });
+                    },
+                  ),
+                  SizedBox(
+                    height: 35,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        CategoriesFilterDropdownButton2(
+                          initialCategory: _selectedCategoryId,
+                          onChanged: (selectedCategory) {
+                            _selectedCategoryId = selectedCategory.categoryId;
+                            context.read<TransactionsBloc>().add(
+                              LoadTransactionsEvent(
+                                month: context.read<SelectedMonthCubit>().state,
+                                search: _searchQuery,
+                                categoryId: _selectedCategoryId,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: AppSpacing.defaultSpacing),
+                        BlocBuilder<SelectedMonthCubit, DateTime>(
+                          builder: (context, selectedMonthState) {
+                            return MonthBudgetsFilterDropdown2(
+                              initMonth: selectedMonthState,
+                              onChanged: (selectedMonth) {
+
+                                context.read<SelectedMonthCubit>().onMonthChanged(newMonth: selectedMonth);
+                              },
+                            );
+                          },
+                        ),
+                      ],
+
+                    ),
                   ),
                   BlocBuilder<TransactionsBloc, TransactionsState>(
                     builder: (context, state) {
@@ -114,6 +205,7 @@ class TransactionsPage extends StatelessWidget {
             ),
           );
         },
+      ),
       ),
     );
   }
