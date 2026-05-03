@@ -1,8 +1,10 @@
 import 'package:get_it/get_it.dart';
+import 'package:mini_spend_tracker_app/bloc/delete_transaction_cubit/delete_transaction_cubit.dart';
 
 import 'api_service/add_expense_api_service.dart';
 import 'api_service/dashboard_api_service.dart';
 import 'api_service/settings_api_service.dart';
+import 'api_service/transactions_api_service.dart';
 import 'bloc/add_expense_cubit/add_expense_cubit.dart';
 import 'bloc/dashboard_bloc/dashboard_bloc.dart';
 import 'bloc/selected_month_cubit/selected_month_cubit.dart';
@@ -10,11 +12,13 @@ import 'bloc/settings/add_category_cubit/add_category_cubit.dart';
 import 'bloc/settings/categories_bloc/categories_bloc.dart';
 import 'bloc/settings/delete_category_cubit/delete_category_cubit.dart';
 import 'bloc/settings/monthly_budget_cubit/monthly_budget_cubit.dart';
+import 'bloc/transactions_bloc/transactions_bloc.dart';
 import 'core/config/app_config.dart';
 import 'core/network/dio_client.dart';
 import 'repository/add_expense_repository.dart';
 import 'repository/dashboard_repository.dart';
 import 'repository/settings_repository.dart';
+import 'repository/transactions_repository.dart';
 
 final serviceLocator = GetIt.instance;
 
@@ -50,5 +54,10 @@ Future<void> _registerBusinessCore() async {
     /// Add Expense
     ..registerLazySingleton<AddExpenseApiService>(() => AddExpenseApiServiceImpl(dioClient: serviceLocator()))
     ..registerLazySingleton<AddExpenseRepository>(() => AddExpenseRepositoryImpl(addExpenseApiService: serviceLocator()))
-    ..registerFactory<AddExpenseCubit>(() => AddExpenseCubit(repository: serviceLocator()));
+    ..registerFactory<AddExpenseCubit>(() => AddExpenseCubit(repository: serviceLocator()))
+    /// Transactions
+    ..registerLazySingleton<TransactionsApiService>(() => TransactionsApiServiceImpl(dioClient: serviceLocator()))
+    ..registerLazySingleton<TransactionsRepository>(() => TransactionsRepositoryImpl(transactionsApiService: serviceLocator()))
+    ..registerFactory<TransactionsBloc>(() => TransactionsBloc(repository: serviceLocator()))
+    ..registerFactory<DeleteTransactionCubit>(() => DeleteTransactionCubit(repository: serviceLocator()));
 }

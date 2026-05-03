@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mini_spend_tracker_app/core/utils/app_padding.dart';
 
 import 'app_colors.dart';
 import 'app_fonts.dart';
@@ -123,7 +124,31 @@ class AppThemes {
       color: AppColors.primaryDark,
       linearTrackColor: AppColors.primaryLight,
     ),
-
+    // ListTile
+    listTileTheme: ListTileThemeData(
+      tileColor: AppColors.surface,
+      contentPadding:  EdgeInsets.symmetric(horizontal: AppPadding.defaultPadding),
+      dense: true,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      titleTextStyle: TextStyle(
+        fontFamily: AppFonts.workSans,
+        fontSize: 16,
+        fontWeight: AppFonts.semiBold,
+        color: AppColors.textPrimary,
+      ),
+      subtitleTextStyle: TextStyle(
+        fontFamily: AppFonts.inter,
+        fontSize: 14,
+        fontWeight: AppFonts.regular,
+        color: AppColors.textSecondary,
+      ),
+      leadingAndTrailingTextStyle: TextStyle(
+        fontFamily: AppFonts.inter,
+        fontSize: 14,
+        fontWeight: AppFonts.regular,
+        color: AppColors.textPrimary,
+      )
+    ),
     // ── Bottom navigation bar ──────────────────────────────────────────────
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: AppColors.surface,
@@ -195,9 +220,7 @@ class AppThemes {
         color: AppColors.textSecondary,
       ),
     ),
-    listTileTheme: ListTileThemeData(
-      tileColor:  AppColors.surface,
-    ),
+
     dividerTheme: const DividerThemeData(
       color: AppColors.primaryLight,
       thickness: 1,

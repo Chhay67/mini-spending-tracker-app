@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 class AppSnackBar {
-  static void showSuccess(BuildContext context, {required String message}) {
+  static void showSuccess(BuildContext context, {required String message,Widget? trialing}) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(message, style: const TextStyle(color: Colors.white)),
+          content: Row(
+            children: [
+              Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+              ?trialing,
+            ],
+          ),
           backgroundColor: AppColors.success,
         ),
       );

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:mini_spend_tracker_app/bloc/dashboard_bloc/dashboard_bloc.dart';
 import 'package:mini_spend_tracker_app/core/utils/date_picker.dart';
 import 'package:mini_spend_tracker_app/core/widget/default_card.dart';
 
-import '../bloc/nav_bar_cubit/nav_bar_cubit.dart';
 import '../bloc/selected_month_cubit/selected_month_cubit.dart';
 import '../core/state/daily_insight_selector.dart';
 import '../core/state/summary_budget_selector.dart';
@@ -17,8 +15,8 @@ import '../core/utils/date_format.dart';
 import '../core/utils/responsive_utils.dart';
 import '../core/widget/error_state_widget.dart';
 import '../init_dependencies.dart';
+import '../route/app_navigation.dart';
 import '../route/routes.dart';
-import 'main_scaffold_page.dart';
 import 'widget/daily_insight_shimmer.dart';
 import 'widget/summary_budget_shimmer.dart';
 
@@ -41,24 +39,15 @@ class DashboardPage extends StatelessWidget {
               _SummaryBudgetView(),
               _DailyInsightView(),
               _QuickActionButtonView(
-                onAddExpense: () => _navigateToRoute(context, Routes.addExpense.path),
-                onViewTransactions: () => _navigateToRoute(context, Routes.transactions.path),
-                onViewSummary: () => _navigateToRoute(context, Routes.categorySummary.path),
+                onAddExpense: () => AppNavigation.navigateToRoute(context: context, routePath: Routes.addExpense.path),
+                onViewTransactions: () => AppNavigation.navigateToRoute(context: context, routePath: Routes.transactions.path),
+                onViewSummary: () => AppNavigation.navigateToRoute(context: context, routePath: Routes.categorySummary.path),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  void _navigateToRoute(BuildContext context, String routePath) {
-    final tabs = MainScaffoldPage.tabs;
-    final index = tabs.indexWhere((tab) => tab.route.path == routePath);
-    if (index != -1) {
-      context.read<NavBarCubit>().onChanged(index);
-      context.goNamed(tabs[index].route.name);
-    }
   }
 }
 
@@ -237,10 +226,7 @@ class _DailyInsightView extends StatelessWidget {
           return const DailyInsightShimmer();
         }
         if (state is DailyInsightError) {
-          return ErrorStateWidget(
-            message: state.message,
-            onRetry: () =>  onRetry(context),
-          );
+          return ErrorStateWidget(message: state.message, onRetry: () => onRetry(context));
         }
         if (state is DailyInsightLoaded) {
           return DefaultCard(

@@ -1,12 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mini_spend_tracker_app/page/add_expense_page.dart';
 import 'package:mini_spend_tracker_app/page/category_summary_page.dart';
 import 'package:mini_spend_tracker_app/page/dashboard_page.dart';
 import 'package:mini_spend_tracker_app/page/main_scaffold_page.dart';
 import 'package:mini_spend_tracker_app/page/settings_page.dart';
 import 'package:mini_spend_tracker_app/page/transactions_page.dart';
 import 'package:mini_spend_tracker_app/route/routes.dart';
+
+import '../page/add_or_update_expense_page.dart';
 
 class AppGoRouter {
   AppGoRouter._();
@@ -36,10 +37,26 @@ class AppGoRouter {
           GoRoute(
             path: Routes.addExpense.path,
             name: Routes.addExpense.name,
-            pageBuilder: (context, state) => NoTransitionPage(
+            pageBuilder: (context, state) {
+              final transactionId = state.uri.queryParameters['transactionId'];
+              final amountString = state.uri.queryParameters['amount'];
+              final parsedAmount = double.tryParse(amountString ?? '');
+              final categoryId = state.uri.queryParameters['categoryId'];
+              final dateString = state.uri.queryParameters['date'];
+              final date = DateTime.tryParse(dateString ?? '');
+              final note = state.uri.queryParameters['note'];
+
+              return NoTransitionPage(
               key: state.pageKey,
-              child: const AddExpensePage(),
-            ),
+              child:  AddOrUpdateExpensePage(
+                transactionId: transactionId,
+                amount: parsedAmount,
+                categoryId: categoryId,
+                date: date,
+                note: note,
+              ),
+            );
+            },
           ),
           GoRoute(
             path: Routes.dashboard.path,

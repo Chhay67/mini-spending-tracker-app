@@ -45,6 +45,7 @@ class CustomTextFormField extends StatelessWidget {
     this.hintStyle,
     this.labelTrailing,
     this.forceErrorText,
+    this.suffix,
   });
 
   final String? label;
@@ -86,6 +87,7 @@ class CustomTextFormField extends StatelessWidget {
   final bool isRequired;
   final String? forceErrorText;
   final Widget? prefixIcon;
+  final Widget? suffix;
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -182,6 +184,7 @@ class CustomTextFormField extends StatelessWidget {
             focusedErrorBorder: OutlineInputBorder(
               borderSide: BorderSide(color: AppColors.error, width: 1),
             ),
+            suffix:suffix ,
             filled: true,
             suffixIcon: suffixIcon,
             hintText: hintText,

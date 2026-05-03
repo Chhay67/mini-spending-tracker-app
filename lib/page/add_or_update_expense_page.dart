@@ -9,6 +9,7 @@ import 'package:mini_spend_tracker_app/core/widget/custom_progress_indicator.dar
 import 'package:mini_spend_tracker_app/core/widget/default_card.dart';
 import 'package:mini_spend_tracker_app/init_dependencies.dart';
 import 'package:mini_spend_tracker_app/page/widget/categories_dropdown_button.dart';
+import 'package:mini_spend_tracker_app/route/app_navigation.dart';
 import '../bloc/settings/categories_bloc/categories_bloc.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/app_spacing.dart';
@@ -16,21 +17,41 @@ import '../core/utils/app_validator.dart';
 import '../core/utils/date_format.dart';
 import '../core/utils/date_picker.dart';
 import '../core/widget/custom_text_form_field.dart';
+import '../route/routes.dart';
 
-class AddExpensePage extends StatefulWidget {
-  const AddExpensePage({super.key});
+class AddOrUpdateExpensePage extends StatefulWidget {
+  const AddOrUpdateExpensePage({super.key, this.transactionId, this.note, this.amount, this.date, this.categoryId});
+  final String? transactionId;
+  final String? note;
+  final num? amount;
+  final DateTime? date;
+  final String? categoryId;
 
   @override
-  State<AddExpensePage> createState() => _AddExpensePageState();
+  State<AddOrUpdateExpensePage> createState() => _AddOrUpdateExpensePageState();
 }
 
-class _AddExpensePageState extends State<AddExpensePage> {
+class _AddOrUpdateExpensePageState extends State<AddOrUpdateExpensePage> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final TextEditingController noteController = TextEditingController();
-  final TextEditingController amountController = TextEditingController();
-  final TextEditingController dateController = TextEditingController(text: DateFormater.formatDate(DateTime.now()));
+  late final TextEditingController noteController;
+  late final TextEditingController amountController;
+  late final TextEditingController dateController;
   String? _selectedCategoryId;
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate = DateTime.now();
+
+  bool get isEditMode => widget.transactionId != null;
+
+  @override
+  void initState() {
+    noteController = TextEditingController(text: widget.note);
+    amountController = TextEditingController(text: widget.amount != null ? widget.amount.toString() : "");
+    _selectedDate = widget.date ?? DateTime.now();
+    dateController = TextEditingController(text: widget.date != null ? DateFormater.formatDate(widget.date!) : DateFormater.formatDate(_selectedDate));
+    _selectedCategoryId = widget.categoryId;
+
+    super.initState();
+  }
+
   @override
   void dispose() {
     amountController.dispose();
@@ -43,13 +64,23 @@ class _AddExpensePageState extends State<AddExpensePage> {
     if (!formKey.currentState!.validate()) {
       return;
     }
+    if(isEditMode){
+      context.read<AddExpenseCubit>().updateExpense(
+        transactionId: widget.transactionId!,
+        amount: num.parse(amountController.text),
+        date: _selectedDate,
+        categoryId: _selectedCategoryId ?? "",
+        note: noteController.text.isEmpty ? null : noteController.text.trim(),
+      );
+    }else{
+      context.read<AddExpenseCubit>().addExpense(
+        amount: num.parse(amountController.text),
+        date: _selectedDate,
+        categoryId: _selectedCategoryId ?? "",
+        note: noteController.text.isEmpty ? null : noteController.text.trim(),
+      );
+    }
 
-    context.read<AddExpenseCubit>().addExpense(
-      amount: num.parse(amountController.text),
-      date: _selectedDate,
-      categoryId: _selectedCategoryId ?? "",
-      note: noteController.text.isEmpty ? null : noteController.text,
-    );
   }
 
   void _resetForm() {
@@ -75,11 +106,25 @@ class _AddExpensePageState extends State<AddExpensePage> {
         listener: (context, state) {
           if (state is AddExpenseSuccess) {
             _resetForm();
-            AppSnackBar.showSuccess(context, message: "Expense added successfully");
+            AppSnackBar.showSuccess(
+              context,
+              message: isEditMode ? "Expense updated successfully" :"Expense added successfully",
+              trialing: TextButton(
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                    side: BorderSide(color: Colors.white, width: 0.5),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () => AppNavigation.navigateToRoute(context: context, routePath: Routes.transactions.path),
+                child: Text("view transactions", style: textTheme.bodySmall?.copyWith(color: Colors.white)),
+              ),
+            );
             return;
           }
           if (state is AddExpenseError) {
-            AppSnackBar.showError(context, message: "Failed to add expense: ${state.message}");
+            AppSnackBar.showError(context, message: state.message);
             return;
           }
         },
@@ -97,7 +142,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 spacing: AppSpacing.defaultSpacing,
                 children: [
                   Text(
-                    "Add Expense",
+                    isEditMode ? "Update Expense" :"Add Expense",
                     textAlign: TextAlign.start,
                     style: textTheme.displayLarge?.copyWith(color: AppColors.textPrimary),
                   ),
@@ -143,7 +188,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         showCursor: true,
                         enabled: false,
                         isRequired: true,
-
                         controller: dateController,
                         onTap: () async {
                           Logger.info("Date field tapped");
@@ -157,6 +201,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       ),
                       CategoriesDropdownButton(
                         isReset: isSaveSuccess,
+                        initialCategory: _selectedCategoryId,
                         onChanged: (category) {
                           if (category.categoryId == null) return;
                           _selectedCategoryId = category.categoryId;
@@ -175,7 +220,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         children: [
                           ElevatedButton(
                             onPressed: isSaving ? null : () => _onSaveExpense(context: context),
-                            child: isSaving ? const CustomProgressIndicator() : Text("Save Expense"),
+
+                            child: isSaving ? const CustomProgressIndicator() :  Text( isEditMode  ? "Update Expense": "Add Expense"),
                           ),
                         ],
                       ),

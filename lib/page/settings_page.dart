@@ -142,9 +142,17 @@ class _MonthlyBudgetViewState extends State<_MonthlyBudgetView> {
                 CustomTextFormField(
                   label: "Monthly Budget",
                   autoValidateMode: AutovalidateMode.onUserInteraction,
-                  labelTrailing: OutlinedButton(
-                    onPressed: isSaving ? null : () => onSaveMonthlyBudget(context),
-                    child: isSaving ? CustomProgressIndicator() : Text("Save"),
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        OutlinedButton(
+                          onPressed: isSaving ? null : () => onSaveMonthlyBudget(context),
+                          child: isSaving ? const CustomProgressIndicator() : const  Text("Save"),
+                        ),
+                      ],
+                    ),
                   ),
                   hintText: "0.00",
                   initialValue: CurrencyFormat.number(data.budgetAmount),
@@ -154,7 +162,6 @@ class _MonthlyBudgetViewState extends State<_MonthlyBudgetView> {
                   inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
                   validator: AppValidator.amount,
                   prefixIcon: Icon(Icons.attach_money),
-
                   onChanged: (value) {
                     final parsedValue = num.tryParse(value) ?? 0.0;
                     if (parsedValue >= 0) {
