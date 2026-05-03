@@ -1,12 +1,14 @@
 import 'package:get_it/get_it.dart';
 import 'package:mini_spend_tracker_app/bloc/all_monthly_budgets_cubit/all_monthly_budgets_cubit.dart';
 import 'package:mini_spend_tracker_app/bloc/delete_transaction_cubit/delete_transaction_cubit.dart';
+import 'package:mini_spend_tracker_app/repository/summary_repository.dart';
 
 import 'api_service/add_expense_api_service.dart';
-import 'api_service/dashboard_api_service.dart';
 import 'api_service/settings_api_service.dart';
+import 'api_service/summary_api_service.dart';
 import 'api_service/transactions_api_service.dart';
 import 'bloc/add_expense_cubit/add_expense_cubit.dart';
+import 'bloc/categories_summary_cubit/categories_summary_cubit.dart';
 import 'bloc/dashboard_bloc/dashboard_bloc.dart';
 import 'bloc/selected_month_cubit/selected_month_cubit.dart';
 import 'bloc/settings/add_category_cubit/add_category_cubit.dart';
@@ -17,7 +19,6 @@ import 'bloc/transactions_bloc/transactions_bloc.dart';
 import 'core/config/app_config.dart';
 import 'core/network/dio_client.dart';
 import 'repository/add_expense_repository.dart';
-import 'repository/dashboard_repository.dart';
 import 'repository/settings_repository.dart';
 import 'repository/transactions_repository.dart';
 
@@ -42,8 +43,8 @@ Future<void> _registerNetwork() async {
 Future<void> _registerBusinessCore() async {
   /// Dashboard
   serviceLocator
-    ..registerLazySingleton<DashboardApiService>(() => DashboardApiServiceImpl(dioClient: serviceLocator()))
-    ..registerLazySingleton<DashboardRepository>(() => DashboardRepositoryImpl(apiService: serviceLocator()))
+    ..registerLazySingleton<SummaryApiService>(() => SummaryApiServiceImpl(dioClient: serviceLocator()))
+    ..registerLazySingleton<SummaryRepository>(() => SummaryRepositoryImpl(apiService: serviceLocator()))
     ..registerFactory<DashboardBloc>(() => DashboardBloc(repository: serviceLocator()))
     /// Settings
     ..registerLazySingleton<SettingsApiService>(() => SettingsApiServiceImpl(dioClient: serviceLocator()))
@@ -61,6 +62,8 @@ Future<void> _registerBusinessCore() async {
     ..registerLazySingleton<TransactionsRepository>(() => TransactionsRepositoryImpl(transactionsApiService: serviceLocator()))
     ..registerFactory<TransactionsBloc>(() => TransactionsBloc(repository: serviceLocator()))
     ..registerFactory<DeleteTransactionCubit>(() => DeleteTransactionCubit(repository: serviceLocator()))
-      ..registerFactory<AllMonthlyBudgetsCubit>(() => AllMonthlyBudgetsCubit(repository: serviceLocator()));
+      ..registerFactory<AllMonthlyBudgetsCubit>(() => AllMonthlyBudgetsCubit(repository: serviceLocator()))
+    /// Categories Summary
+    ..registerFactory<CategoriesSummaryCubit>(() => CategoriesSummaryCubit(repository: serviceLocator()));
 
 }

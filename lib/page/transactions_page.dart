@@ -14,7 +14,6 @@ import 'package:mini_spend_tracker_app/route/app_navigation.dart';
 
 import '../bloc/all_monthly_budgets_cubit/all_monthly_budgets_cubit.dart';
 import '../bloc/delete_transaction_cubit/delete_transaction_cubit.dart';
-import '../bloc/selected_month_cubit/selected_month_cubit.dart';
 import '../bloc/settings/categories_bloc/categories_bloc.dart';
 import '../bloc/transactions_bloc/transactions_bloc.dart';
 import '../core/theme/app_colors.dart';
@@ -104,27 +103,32 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       });
                     },
                   ),
-                  SizedBox(
-                    height: 35,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        CategoriesFilterDropdownButton2(
-                          initialCategory: _selectedCategoryId,
-                          onChanged: (selectedCategory) {
-                            _selectedCategoryId = selectedCategory.categoryId;
-                            onLoadTransactions(context);
-                          },
-                        ),
-                        const SizedBox(width: AppSpacing.defaultSpacing),
-                        MonthBudgetsFilterDropdown2(
-                          initMonth: _selectedMonth,
-                          onChanged: (selectedMonth) {
-                            _selectedMonth = selectedMonth;
-                            onLoadTransactions(context);
-                          },
-                        )
-                      ],
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: ResponsiveUtils.mobileMaxWidth,
+                    ),
+                    child: SizedBox(
+                      height: 35,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          MonthBudgetsFilterDropdown2(
+                            initMonth: _selectedMonth,
+                            onChanged: (selectedMonth) {
+                              _selectedMonth = selectedMonth;
+                              onLoadTransactions(context);
+                            },
+                          ),
+                          const SizedBox(width: AppSpacing.defaultSpacing),
+                          CategoriesFilterDropdownButton2(
+                            initialCategory: _selectedCategoryId,
+                            onChanged: (selectedCategory) {
+                              _selectedCategoryId = selectedCategory.categoryId;
+                              onLoadTransactions(context);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   BlocBuilder<TransactionsBloc, TransactionsState>(
@@ -142,6 +146,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                         return ConstrainedBox(
                           constraints: BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth),
                           child: PaginationListView(
+                            padding: EdgeInsets.zero,
                             physics: const NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
                             emptyWidget: SizedBox(

@@ -1,5 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../theme/app_colors.dart';
 
@@ -14,6 +15,7 @@ class CustomDropdownButton2<T> extends StatefulWidget {
     this.isError = false,
     this.errorMessage,
     this.onRefresh,
+    this.padding = EdgeInsets.zero,
   });
   final List<T> items;
 
@@ -31,6 +33,8 @@ class CustomDropdownButton2<T> extends StatefulWidget {
   final String? errorMessage;
 
   final Future<void> Function()? onRefresh;
+  final EdgeInsets padding;
+
   @override
   State<CustomDropdownButton2<T>> createState() => _CustomDropdownButton2State<T>();
 }
@@ -65,6 +69,10 @@ class _CustomDropdownButton2State<T> extends State<CustomDropdownButton2<T>> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isLoading) {
+      return const _LoadingShimmer();
+    }
+    
     final textTheme = Theme.of(context).textTheme;
     return DropdownButtonHideUnderline(
       child: DropdownButton2(
@@ -72,8 +80,8 @@ class _CustomDropdownButton2State<T> extends State<CustomDropdownButton2<T>> {
         style: textTheme.labelSmall,
         isExpanded: false,
         isDense: true,
-        buttonStyleData: const ButtonStyleData(
-          padding: EdgeInsets.zero,
+        buttonStyleData:ButtonStyleData(
+          padding: widget.padding,
           elevation: 0,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(24)),
@@ -107,7 +115,7 @@ class _CustomDropdownButton2State<T> extends State<CustomDropdownButton2<T>> {
                   icon: const Icon(Icons.refresh_rounded, color: AppColors.error, size: 20),
                 )
               : widget.isLoading
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              ? _LoadingShimmer()
               : Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey.shade500),
         ),
         onChanged: widget.isLoading
@@ -126,6 +134,27 @@ class _CustomDropdownButton2State<T> extends State<CustomDropdownButton2<T>> {
               ),
             )
             .toList(),
+      ),
+    );
+  }
+}
+
+
+class _LoadingShimmer extends StatelessWidget {
+  const _LoadingShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        height: 35,
+        width: 110,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+        ),
       ),
     );
   }

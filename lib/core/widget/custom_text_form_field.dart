@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:mini_spend_tracker_app/core/utils/app_spacing.dart';
 
 import '../theme/app_colors.dart';
+import '../utils/responsive_utils.dart';
 
 class CustomTextFormField extends StatelessWidget {
   const CustomTextFormField({
@@ -91,109 +92,114 @@ class CustomTextFormField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: AppSpacing.smallSpacing,
-      children: [
-        if (label != null)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: RichText(
-                  text: TextSpan(
-                    text: label,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
-                    children: [
-                      if (isRequired)
-                        TextSpan(
-                          text: " *",
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: AppColors.error,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        maxWidth: ResponsiveUtils.mobileMaxWidth,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.smallSpacing,
+        children: [
+          if (label != null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: RichText(
+                    text: TextSpan(
+                      text: label,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                      children: [
+                        if (isRequired)
+                          TextSpan(
+                            text: " *",
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: AppColors.error,
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              if(labelTrailing != null) ...[
-                const SizedBox(width: 8),
-                labelTrailing!,
+                if(labelTrailing != null) ...[
+                  const SizedBox(width: 8),
+                  labelTrailing!,
+                ],
               ],
-            ],
+            ),
+          TextFormField(
+            onTap: onTap,
+            readOnly: readOnly,
+            ignorePointers: false,
+            minLines: minLines,
+            maxLines: maxLines,
+            maxLength: maxLength,
+            controller: controller,
+            initialValue: initialValue,
+            inputFormatters: inputFormatters,
+            validator: (value) {
+              if(isRequired && (value == null || value.isEmpty)) {
+                return "This field is required";
+              }
+              if(validator != null) {
+                return validator!(value);
+              }
+              return null;
+            },
+            enabled: enabled,
+            style: style ?? textTheme.titleMedium,
+            textAlign: textAlign,
+            keyboardType: keyboardType,
+            onChanged: onChanged,
+            onSaved: onSaved,
+            textDirection: textDirection,
+            autocorrect: autocorrect,
+            autofillHints: autofillHints,
+            autofocus: autofocus,
+            autovalidateMode: autoValidateMode,
+            canRequestFocus: canRequestFocus,
+            focusNode: focusNode,
+            expands: expands,
+            obscureText: obscureText,
+            onEditingComplete: onEditingComplete,
+            onFieldSubmitted: onFieldSubmitted,
+            showCursor: showCursor,
+            textInputAction: textInputAction,
+            textAlignVertical: textAlignVertical,
+            textCapitalization: textCapitalization,
+            forceErrorText: forceErrorText,
+            decoration: InputDecoration(
+              hintStyle: hintStyle ?? textTheme.bodySmall,
+              border: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+              ),
+              prefixIcon: prefixIcon,
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: AppColors.error, width: 1),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: AppColors.error, width: 1),
+              ),
+              suffix:suffix ,
+              filled: true,
+              suffixIcon: suffixIcon,
+              hintText: hintText,
+              fillColor: AppColors.surface,
+              focusColor: AppColors.surface,
+              hoverColor: AppColors.surface,
+            ),
           ),
-        TextFormField(
-          onTap: onTap,
-          readOnly: readOnly,
-          ignorePointers: false,
-          minLines: minLines,
-          maxLines: maxLines,
-          maxLength: maxLength,
-          controller: controller,
-          initialValue: initialValue,
-          inputFormatters: inputFormatters,
-          validator: (value) {
-            if(isRequired && (value == null || value.isEmpty)) {
-              return "This field is required";
-            }
-            if(validator != null) {
-              return validator!(value);
-            }
-            return null;
-          },
-          enabled: enabled,
-          style: style ?? textTheme.titleMedium,
-          textAlign: textAlign,
-          keyboardType: keyboardType,
-          onChanged: onChanged,
-          onSaved: onSaved,
-          textDirection: textDirection,
-          autocorrect: autocorrect,
-          autofillHints: autofillHints,
-          autofocus: autofocus,
-          autovalidateMode: autoValidateMode,
-          canRequestFocus: canRequestFocus,
-          focusNode: focusNode,
-          expands: expands,
-          obscureText: obscureText,
-          onEditingComplete: onEditingComplete,
-          onFieldSubmitted: onFieldSubmitted,
-          showCursor: showCursor,
-          textInputAction: textInputAction,
-          textAlignVertical: textAlignVertical,
-          textCapitalization: textCapitalization,
-          forceErrorText: forceErrorText,
-          decoration: InputDecoration(
-            hintStyle: hintStyle ?? textTheme.bodySmall,
-            border: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-            ),
-            prefixIcon: prefixIcon,
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.error, width: 1),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.error, width: 1),
-            ),
-            suffix:suffix ,
-            filled: true,
-            suffixIcon: suffixIcon,
-            hintText: hintText,
-            fillColor: AppColors.surface,
-            focusColor: AppColors.surface,
-            hoverColor: AppColors.surface,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
