@@ -41,19 +41,17 @@ class _TransactionsPageState extends State<TransactionsPage> {
   Timer? _debounce;
   String? _searchQuery;
   String? _selectedCategoryId;
-
+  DateTime _selectedMonth = DateTime.now();
   @override
   void dispose() {
     _debounce?.cancel();
     super.dispose();
   }
 
-  void onRetry(BuildContext context) {
+  void onLoadTransactions(BuildContext context) {
     context.read<TransactionsBloc>().add(
-        LoadTransactionsEvent(month: context.read<SelectedMonthCubit>().state,
-            search: _searchQuery,
-            categoryId: _selectedCategoryId
-        ));
+      LoadTransactionsEvent(month: _selectedMonth, search: _searchQuery, categoryId: _selectedCategoryId),
+    );
   }
 
   @override
@@ -64,24 +62,13 @@ class _TransactionsPageState extends State<TransactionsPage> {
     return MultiBlocProvider(
       providers: [
         BlocProvider<TransactionsBloc>(
-          create: (context) =>
-              serviceLocator<TransactionsBloc>()..add(LoadTransactionsEvent(month: context.read<SelectedMonthCubit>().state)),
+          create: (context) => serviceLocator<TransactionsBloc>()..add(LoadTransactionsEvent(month: _selectedMonth)),
         ),
         BlocProvider<CategoriesBloc>(create: (context) => serviceLocator<CategoriesBloc>()..add(LoadCategoriesEvent())),
         BlocProvider<AllMonthlyBudgetsCubit>(create: (context) => serviceLocator<AllMonthlyBudgetsCubit>()..loadAllMonthlyBudgets()),
       ],
-      child: BlocListener<SelectedMonthCubit, DateTime>(
-        listener: (context, state) {
-          context.read<TransactionsBloc>().add(
-            LoadTransactionsEvent(
-              month: state,
-              search: _searchQuery,
-              categoryId: _selectedCategoryId,
-            ),
-          );
-        },
-        child: BlocSelector<TransactionsBloc, TransactionsState, bool>(
-          selector: (state) {
+      child: BlocSelector<TransactionsBloc, TransactionsState, bool>(
+        selector: (state) {
           if (state is TransactionsLoaded) {
             return state.pagination.hasNext;
           }
@@ -91,11 +78,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
           return ScrollNotificationHandler(
             loadMore: () {
               context.read<TransactionsBloc>().add(
-                LoadMoreTransactionsEvent(
-                  month: context.read<SelectedMonthCubit>().state,
-                  search: _searchQuery,
-                  categoryId: _selectedCategoryId,
-                ),
+                LoadMoreTransactionsEvent(month: _selectedMonth, search: _searchQuery, categoryId: _selectedCategoryId),
               );
             },
             isHasMore: isHasMore,
@@ -117,12 +100,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       if (_debounce?.isActive ?? false) _debounce?.cancel();
                       _debounce = Timer(const Duration(milliseconds: 500), () {
                         _searchQuery = value.trim().isEmpty ? null : value.trim();
-                        context.read<TransactionsBloc>().add(
-                          LoadTransactionsEvent(month: context.read<SelectedMonthCubit>().state,
-                              search: _searchQuery,
-                              categoryId: _selectedCategoryId
-                          ),
-                        );
+                        onLoadTransactions(context);
                       });
                     },
                   ),
@@ -135,29 +113,18 @@ class _TransactionsPageState extends State<TransactionsPage> {
                           initialCategory: _selectedCategoryId,
                           onChanged: (selectedCategory) {
                             _selectedCategoryId = selectedCategory.categoryId;
-                            context.read<TransactionsBloc>().add(
-                              LoadTransactionsEvent(
-                                month: context.read<SelectedMonthCubit>().state,
-                                search: _searchQuery,
-                                categoryId: _selectedCategoryId,
-                              ),
-                            );
+                            onLoadTransactions(context);
                           },
                         ),
                         const SizedBox(width: AppSpacing.defaultSpacing),
-                        BlocBuilder<SelectedMonthCubit, DateTime>(
-                          builder: (context, selectedMonthState) {
-                            return MonthBudgetsFilterDropdown2(
-                              initMonth: selectedMonthState,
-                              onChanged: (selectedMonth) {
-
-                                context.read<SelectedMonthCubit>().onMonthChanged(newMonth: selectedMonth);
-                              },
-                            );
+                        MonthBudgetsFilterDropdown2(
+                          initMonth: _selectedMonth,
+                          onChanged: (selectedMonth) {
+                            _selectedMonth = selectedMonth;
+                            onLoadTransactions(context);
                           },
-                        ),
+                        )
                       ],
-
                     ),
                   ),
                   BlocBuilder<TransactionsBloc, TransactionsState>(
@@ -167,7 +134,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       }
 
                       if (state is TransactionsError) {
-                        return ErrorStateWidget(message: state.message, onRetry: () => onRetry(context));
+                        return ErrorStateWidget(message: state.message, onRetry: () =>  onLoadTransactions(context));
                       }
                       if (state is TransactionsLoaded) {
                         final transactions = state.transactions;
@@ -205,7 +172,6 @@ class _TransactionsPageState extends State<TransactionsPage> {
             ),
           );
         },
-      ),
       ),
     );
   }
