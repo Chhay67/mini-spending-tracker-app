@@ -39,7 +39,6 @@ class SettingsPage extends StatelessWidget {
         ),
         BlocProvider<CategoriesBloc>(create: (_) => serviceLocator<CategoriesBloc>()..add(const LoadCategoriesEvent())),
         BlocProvider<AddCategoryCubit>(create: (_) => serviceLocator<AddCategoryCubit>()),
-        BlocProvider<DeleteCategoryCubit>(create: (_) => serviceLocator<DeleteCategoryCubit>()),
       ],
 
       child: MultiBlocListener(
@@ -57,15 +56,6 @@ class SettingsPage extends StatelessWidget {
               if (state is AddCategoryError) {
                 AppSnackBar.showError(context, message: "Failed to add category: ${state.message}");
                 return;
-              }
-            },
-          ),
-          BlocListener<DeleteCategoryCubit, DeleteCategoryState>(
-            listener: (context, state) {
-              if (state is DeleteCategorySuccess) {
-                context.read<CategoriesBloc>().add(DeleteCategoryEvent(categoryId: state.categoryToDelete.categoryId!));
-                context.pop();
-                AppSnackBar.showSuccess(context, message: "${state.categoryToDelete.categoryName} deleted successfully.");
               }
             },
           ),
@@ -244,16 +234,22 @@ class _CategoriesViewState extends State<_CategoriesView> {
   Future<void> onDeleteCategory(BuildContext context, CategoryModel category) async {
     Logger.info("Delete category with id: ${category.categoryId} and name: ${category.categoryName}");
 
-    final deleteCubit = context.read<DeleteCategoryCubit>();
     await showDialog(
       context: context,
       barrierDismissible: false,
       useSafeArea: true,
       builder: (dialogContext) {
-        return BlocProvider.value(
-          value: deleteCubit,
-          child: BlocBuilder<DeleteCategoryCubit, DeleteCategoryState>(
-            builder: (context, state) {
+        return BlocProvider(
+          create: (providerContext) => serviceLocator<DeleteCategoryCubit>(),
+          child: BlocConsumer<DeleteCategoryCubit, DeleteCategoryState>(
+            listener: (listenerContext, state) {
+              if (state is DeleteCategorySuccess) {
+                context.read<CategoriesBloc>().add(DeleteCategoryEvent(categoryId: state.categoryToDelete.categoryId!));
+                listenerContext.pop();
+                AppSnackBar.showSuccess(context, message: "${state.categoryToDelete.categoryName} deleted successfully.");
+              }
+            },
+            builder: (builderContext, state) {
               final isLoading = state is DeleteCategoryLoading;
               final isError = state is DeleteCategoryError;
               return Dialog(
@@ -266,7 +262,7 @@ class _CategoriesViewState extends State<_CategoriesView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text("Delete Category", style: Theme.of(context).textTheme.titleLarge),
+                      Text("Delete Category", style: Theme.of(builderContext).textTheme.titleLarge),
                       if (isError) const Icon(Icons.error_outline, color: AppColors.error, size: 48),
                       Text(
                         isError
@@ -274,7 +270,7 @@ class _CategoriesViewState extends State<_CategoriesView> {
                             : "Are you sure you want to delete the category \"${category.categoryName}\"? This action cannot be undone.",
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: isError ? AppColors.error : AppColors.textSecondary),
+                        style: Theme.of(builderContext).textTheme.bodySmall?.copyWith(color: isError ? AppColors.error : AppColors.textSecondary),
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -289,7 +285,7 @@ class _CategoriesViewState extends State<_CategoriesView> {
                             onPressed: isLoading
                                 ? null
                                 : () {
-                                    context.read<DeleteCategoryCubit>().deleteCategory(categoryToDelete: category);
+                                    builderContext.read<DeleteCategoryCubit>().deleteCategory(categoryToDelete: category);
                                   },
                             child: isLoading ? const CustomProgressIndicator() : const Text("Delete"),
                           ),
