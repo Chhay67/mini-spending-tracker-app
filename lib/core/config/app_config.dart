@@ -20,9 +20,6 @@ class AppConfig {
 
   static FlavorEnum get appFlavor => instance.flavor;
 
-  // static bool get isProduction => appFlavor == FlavorEnum.production;
-  static const String baseUrl =
-      'https://script.google.com/macros/s/AKfycbwZ9QZ6ZosPyYg2Sl68ggjxs7pgPCOdUj7E-skgC1nSzDZ2v2uWNiGD2P-KWE8WAlDXQw/exec';
   static String get appName {
     switch (appFlavor) {
       case FlavorEnum.dev:
@@ -31,6 +28,18 @@ class AppConfig {
         return 'Spend Tracker Staging';
       case FlavorEnum.production:
         return 'Spend Tracker';
+    }
+  }
+
+  static String get baseUrl {
+    switch (appFlavor) {
+      case FlavorEnum.dev:
+        return 'https://script.google.com/macros/s/AKfycbwZ9QZ6ZosPyYg2Sl68ggjxs7pgPCOdUj7E-skgC1nSzDZ2v2uWNiGD2P-KWE8WAlDXQw/exec';
+
+      case FlavorEnum.staging:
+        return 'https://script.google.com/macros/s/AKfycbwZ9QZ6ZosPyYg2Sl68ggjxs7pgPCOdUj7E-skgC1nSzDZ2v2uWNiGD2P-KWE8WAlDXQw/exec';
+      case FlavorEnum.production:
+        return 'https://script.google.com/macros/s/AKfycbwO6DHsXaZU9DgkKU4YTpPQ-oZpGHJ5-2FBMdamhO-I0BG2qGB6q9OsglMqF_v5cPhl/exec';
     }
   }
 
