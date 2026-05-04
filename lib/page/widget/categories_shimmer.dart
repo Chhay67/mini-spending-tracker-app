@@ -13,7 +13,6 @@ class CategoriesShimmer extends StatelessWidget {
     return Column(
       spacing: AppSpacing.defaultSpacing,
       children: [
-        // Static Header (Matches _CategoryHeaderButton)
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: ResponsiveUtils.mobileMaxWidth),
           child: Row(

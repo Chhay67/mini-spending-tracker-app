@@ -4,7 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
+import 'package:mini_spend_tracker_app/core/enum/filter_type_enum.dart';
 import 'package:mini_spend_tracker_app/model/transaction_model.dart';
 import 'package:mini_spend_tracker_app/repository/transactions_repository.dart';
 
@@ -24,8 +24,13 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
   FutureOr<void> _loadTransactions(LoadTransactionsEvent event, Emitter<TransactionsState> emit) async {
     try {
       emit(const TransactionsLoading());
-      final monthFormat = DateFormat('yyyy-MM').format(event.month ?? DateTime.now());
-      final result = await repository.getTransactions(monthKey: monthFormat, search: event.search, categoryId: event.categoryId);
+      final result = await repository.getTransactions(
+         date:  event.date,
+          filterType: event.filterType,
+          search: event.search,
+          categoryId: event.categoryId,
+
+      );
 
       emit(TransactionsLoaded(transactions: result.transactions, pagination: result.pagination));
     } catch (error) {
@@ -37,12 +42,12 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
     final currentState = state;
     if (currentState is TransactionsLoaded && currentState.pagination.hasNext) {
       try {
-        final monthFormat = DateFormat('yyyy-MM').format(event.month ?? DateTime.now());
         final result = await repository.getTransactions(
-            monthKey: monthFormat,
+            date: event.date,
             search: event.search,
             categoryId: event.categoryId,
             page: currentState.pagination.page + 1,
+            filterType: event.filterType,
          );
 
         final updatedTransactions = [...currentState.transactions, ...result.transactions];

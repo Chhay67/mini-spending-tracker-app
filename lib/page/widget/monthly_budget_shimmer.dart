@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mini_spend_tracker_app/core/utils/app_padding.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/utils/app_spacing.dart';
 import '../../core/widget/custom_text_form_field.dart';
 import '../../core/widget/default_card.dart';
 
@@ -11,43 +10,40 @@ class MonthlyBudgetShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
 
     return DefaultCard(
       children: [
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.smallSpacing,
-          children: [
-            Text(
-              "Monthly Budget",
-              style: textTheme.bodyMedium?.copyWith(
-                color: AppColors.textPrimary,
+        CustomTextFormField(
+          label: "Monthly Budget for",
+          labelMainAxisAlignment: MainAxisAlignment.start,
+          labelTrailing: Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              margin: EdgeInsets.only(left: AppPadding.smallPadding),
+              width: 80,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
-            Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
-              child: CustomTextFormField(
-                enabled: false,
-                hintText: "0.00",
-                prefixIcon: const Icon(Icons.attach_money),
-                suffixIcon: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const OutlinedButton(
-                        onPressed: null,
-                        child: Text("Save"),
-                      ),
-                    ],
-                  ),
+          ),
+          enabled: false,
+
+          prefixIcon: const Icon(Icons.attach_money),
+          suffixIcon: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const OutlinedButton(
+                  onPressed: null,
+                  child: Text("Save"),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ],
     );

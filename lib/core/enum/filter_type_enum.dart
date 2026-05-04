@@ -1,0 +1,1 @@
+enum FilterTypeEnum { month, day }

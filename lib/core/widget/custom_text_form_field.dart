@@ -47,6 +47,8 @@ class CustomTextFormField extends StatelessWidget {
     this.labelTrailing,
     this.forceErrorText,
     this.suffix,
+    this.labelMainAxisAlignment = MainAxisAlignment.spaceBetween,
+    this.spacing = AppSpacing.smallSpacing,
   });
 
   final String? label;
@@ -89,6 +91,8 @@ class CustomTextFormField extends StatelessWidget {
   final String? forceErrorText;
   final Widget? prefixIcon;
   final Widget? suffix;
+  final MainAxisAlignment labelMainAxisAlignment ;
+  final double spacing;
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -99,11 +103,11 @@ class CustomTextFormField extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: AppSpacing.smallSpacing,
+        spacing: spacing,
         children: [
           if (label != null)
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: labelMainAxisAlignment,
               children: [
                 Flexible(
                   child: RichText(
@@ -125,7 +129,7 @@ class CustomTextFormField extends StatelessWidget {
                   ),
                 ),
                 if(labelTrailing != null) ...[
-                  const SizedBox(width: 8),
+
                   labelTrailing!,
                 ],
               ],

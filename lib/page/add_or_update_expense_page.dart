@@ -8,7 +8,7 @@ import 'package:mini_spend_tracker_app/core/utils/logger.dart';
 import 'package:mini_spend_tracker_app/core/widget/custom_progress_indicator.dart';
 import 'package:mini_spend_tracker_app/core/widget/default_card.dart';
 import 'package:mini_spend_tracker_app/init_dependencies.dart';
-import 'package:mini_spend_tracker_app/page/widget/categories_dropdown_button.dart';
+import 'package:mini_spend_tracker_app/page/widget/categories_dropdown_button_form_field2.dart';
 import 'package:mini_spend_tracker_app/route/app_navigation.dart';
 import '../bloc/settings/categories_bloc/categories_bloc.dart';
 import '../core/theme/app_colors.dart';
@@ -124,7 +124,21 @@ class _AddOrUpdateExpensePageState extends State<AddOrUpdateExpensePage> {
             return;
           }
           if (state is AddExpenseError) {
-            AppSnackBar.showError(context, message: state.message);
+            final bool isMessageContainBudgetNotFound = state.message.toLowerCase().contains("Budget not found".toLowerCase());
+            AppSnackBar.showError(
+                context, message:  state.message,
+              trialing:isMessageContainBudgetNotFound ? TextButton(
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                    side: BorderSide(color: Colors.white, width: 0.5),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () => AppNavigation.navigateToRoute(context: context, routePath: Routes.settings.path),
+                child: Text("Go Settings", style: textTheme.bodySmall?.copyWith(color: Colors.white)),
+              ) : null,
+            );
             return;
           }
         },

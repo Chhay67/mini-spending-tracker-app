@@ -4,18 +4,20 @@ part of 'transactions_bloc.dart';
 sealed class TransactionsEvent {}
 
 final class LoadTransactionsEvent extends TransactionsEvent {
-  final DateTime? month;
+  final DateTime date;
   final String? search;
   final String? categoryId;
-  LoadTransactionsEvent({this.month, this.search, this.categoryId});
+  final FilterTypeEnum filterType;
+  LoadTransactionsEvent({required this.date, this.search, this.categoryId, this.filterType = FilterTypeEnum.month});
 }
 
 final class LoadMoreTransactionsEvent extends TransactionsEvent {
-  final DateTime? month;
+  final DateTime date;
   final String? search;
   final String? categoryId;
+  final FilterTypeEnum filterType;
 
-  LoadMoreTransactionsEvent({this.month, this.search, this.categoryId});
+  LoadMoreTransactionsEvent({required this.date, this.search, this.categoryId, this.filterType = FilterTypeEnum.month});
 }
 
 final class DeleteTransactionEvent extends TransactionsEvent {

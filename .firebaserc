@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "spending-tracker-app-168"
+  },
+  "targets": {
+    "spending-tracker-app-168": {
+      "hosting": {
+        "dev": [
+          "spending-tracker-dev-site"
+        ],
+        "prod": [
+          "spending-tracker-site"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

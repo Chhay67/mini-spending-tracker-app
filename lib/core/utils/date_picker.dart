@@ -67,6 +67,9 @@ class DatePicker {
       firstDate: firstDate ?? DateTime(now.year - 100),
       lastDate: lastDate ?? now,
       monthPickerDialogSettings: MonthPickerDialogSettings(
+        actionBarSettings: PickerActionBarSettings(
+          actionBarPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        ),
         headerSettings: const PickerHeaderSettings(
           headerBackgroundColor: AppColors.surface,
           headerIconsColor: AppColors.textPrimary,

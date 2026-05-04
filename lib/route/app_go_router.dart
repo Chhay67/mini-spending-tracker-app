@@ -25,7 +25,11 @@ class AppGoRouter {
     debugLogDiagnostics: true,
     initialLocation: Routes.addExpense.path,
     redirect: (context, state) {
-      return null;
+      final location = state.matchedLocation;
+      final isValid = Routes.validPaths.any(
+        (path) => location == path || location.startsWith('$path?'),
+      );
+      return isValid ? null : Routes.addExpense.path;
     },
     routes: [
       ShellRoute(
@@ -85,6 +89,11 @@ class AppGoRouter {
         ],
       ),
     ],
-
+    errorBuilder: (context, state) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go(Routes.addExpense.path);
+      });
+      return const SizedBox.shrink();
+    },
   );
 }

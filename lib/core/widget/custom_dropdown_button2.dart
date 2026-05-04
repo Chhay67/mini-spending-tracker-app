@@ -2,6 +2,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../constants/constants.dart';
 import '../theme/app_colors.dart';
 
 class CustomDropdownButton2<T> extends StatefulWidget {
@@ -80,8 +81,9 @@ class _CustomDropdownButton2State<T> extends State<CustomDropdownButton2<T>> {
         style: textTheme.labelSmall,
         isExpanded: false,
         isDense: true,
-        buttonStyleData:ButtonStyleData(
+        buttonStyleData: ButtonStyleData(
           padding: widget.padding,
+          height:  kDefaultDropDownHeight,
           elevation: 0,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(24)),

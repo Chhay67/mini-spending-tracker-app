@@ -1,5 +1,5 @@
 name: mini_spend_tracker_app
-description: "A new Flutter project."
+description: "Simple and intuitive expense tracking app that helps users manage their daily spending, monitor budgets, and gain insights into their financial habits. With a user-friendly interface and powerful features, Mini Spend Tracker empowers users to take control of their finances and make informed decisions about their spending habits."
 
 publish_to: 'none'
 
@@ -27,11 +27,14 @@ dependencies:
   shimmer: ^3.0.0
   equatable: ^2.0.8
   collection: ^1.19.1
+  firebase_core: ^4.7.0
+  flutter_native_splash: ^2.4.7
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  flutter_launcher_icons: ^0.14.4
 
   flutter_lints: ^6.0.0
 
@@ -42,6 +45,7 @@ flutter:
   assets:
     - assets/fonts/inter/
     - assets/fonts/work_sans/
+    - assets/icon/
 
   fonts:
     - family: Inter
