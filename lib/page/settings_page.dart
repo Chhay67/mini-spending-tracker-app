@@ -18,6 +18,8 @@ import '../core/utils/app_padding.dart';
 import '../core/utils/app_snack_bar.dart';
 import '../core/utils/app_spacing.dart';
 import '../core/utils/app_validator.dart';
+import '../core/utils/date_format.dart';
+import '../core/utils/date_picker.dart';
 import '../core/utils/responsive_utils.dart';
 import '../core/widget/custom_progress_indicator.dart';
 import '../core/widget/error_state_widget.dart';
@@ -140,7 +142,20 @@ class _MonthlyBudgetViewState extends State<_MonthlyBudgetView> {
             child: DefaultCard(
               children: [
                 CustomTextFormField(
-                  label: "Monthly Budget",
+                  label: "Monthly Budget for",
+                  labelMainAxisAlignment: MainAxisAlignment.start,
+                  labelTrailing: BlocBuilder<SelectedMonthCubit,DateTime>(builder: (context, selectedMonth) {
+                    return TextButton(
+                      child: Text(DateFormater.formatYearMonth(selectedMonth), textAlign: TextAlign.center, style: textTheme.titleLarge),
+                      onPressed: () async {
+                        final pickedMonth = await DatePicker.showMonthPickerDialog(context, initialDate: selectedMonth);
+                        if (pickedMonth != null && context.mounted) {
+                          context.read<SelectedMonthCubit>().onMonthChanged(newMonth: pickedMonth);
+                        }
+                      },
+                    );
+                  },),
+                  // labelTrailing: TextButton(onPressed: onPressed, child: child),
                   autoValidateMode: AutovalidateMode.onUserInteraction,
                   suffixIcon: Padding(
                     padding: const EdgeInsets.all(8.0),

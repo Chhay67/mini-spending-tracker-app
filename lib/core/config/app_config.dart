@@ -1,7 +1,9 @@
 
+import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 
 import '../enum/flavor.dart';
-
+import '../../firebase_options/firebase_options_dev.dart' as dev;
+import '../../firebase_options/firebase_options_prod.dart' as prod;
 
 
 class AppConfig {
@@ -43,14 +45,14 @@ class AppConfig {
     }
   }
 
-// static FirebaseOptions get firebaseOptions {
-//   switch (appFlavor) {
-//     case FlavorEnum.dev:
-//       return dev.DefaultFirebaseOptions.currentPlatform;
-//     case FlavorEnum.staging:
-//       return dev.DefaultFirebaseOptions.currentPlatform;
-//     case FlavorEnum.production:
-//       return prod.DefaultFirebaseOptions.currentPlatform;
-//   }
-// }
+static FirebaseOptions get firebaseOptions {
+  switch (appFlavor) {
+    case FlavorEnum.dev:
+      return dev.DefaultFirebaseOptions.currentPlatform;
+    case FlavorEnum.staging:
+      return dev.DefaultFirebaseOptions.currentPlatform;
+    case FlavorEnum.production:
+      return prod.DefaultFirebaseOptions.currentPlatform;
+  }
+}
 }
