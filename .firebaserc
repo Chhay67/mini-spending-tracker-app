@@ -10,6 +10,9 @@
         ],
         "prod": [
           "tracking-spend-site"
+        ],
+        "kra": [
+          "tracking-spend-kra-site"
         ]
       }
     }

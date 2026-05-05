@@ -1,52 +1,73 @@
 {
-  "hosting": [
-    {
-      "target": "dev",
-      "public": "build/web",
-      "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**"
-      ],
-      "rewrites": [
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
-      ]
-    },
-    {
-      "target": "prod",
-      "public": "build/web",
-      "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**"
-      ],
-      "rewrites": [
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
-      ]
-    }
-  ],
-  "flutter": {
-    "platforms": {
-      "dart": {
-        "lib/firebase_options/firebase_options_dev.dart": {
-          "projectId": "spending-tracker-app-168",
-          "configurations": {
-            "web": "1:219461001932:web:3cb7ef08cf1b1ee4511869"
+     "hosting": [
+          {
+               "target": "dev",
+               "public": "build/web",
+               "ignore": [
+                    "firebase.json",
+                    "**/.*",
+                    "**/node_modules/**"
+               ],
+               "rewrites": [
+                    {
+                         "source": "**",
+                         "destination": "/index.html"
+                    }
+               ]
+          },
+          {
+               "target": "prod",
+               "public": "build/web",
+               "ignore": [
+                    "firebase.json",
+                    "**/.*",
+                    "**/node_modules/**"
+               ],
+               "rewrites": [
+                    {
+                         "source": "**",
+                         "destination": "/index.html"
+                    }
+               ]
+          },
+          {
+               "target": "kra",
+               "public": "build/web",
+               "ignore": [
+                    "firebase.json",
+                    "**/.*",
+                    "**/node_modules/**"
+               ],
+               "rewrites": [
+                    {
+                         "source": "**",
+                         "destination": "/index.html"
+                    }
+               ]
           }
-        },
-        "lib/firebase_options/firebase_options_prod.dart": {
-          "projectId": "spending-tracker-app-168",
-          "configurations": {
-            "web": "1:219461001932:web:3b600a7610c350e3511869"
+     ],
+     "flutter": {
+          "platforms": {
+               "dart": {
+                    "lib/firebase_options/firebase_options_dev.dart": {
+                         "projectId": "spending-tracker-app-168",
+                         "configurations": {
+                              "web": "1:219461001932:web:3cb7ef08cf1b1ee4511869"
+                         }
+                    },
+                    "lib/firebase_options/firebase_options_prod.dart": {
+                         "projectId": "spending-tracker-app-168",
+                         "configurations": {
+                              "web": "1:219461001932:web:3b600a7610c350e3511869"
+                         }
+                    },
+                    "lib/firebase_options/firebase_options_kra.dart": {
+                         "projectId": "spending-tracker-app-168",
+                         "configurations": {
+                              "web": "1:219461001932:web:87fbb9431d40ddbe511869"
+                         }
+                    }
+               }
           }
-        }
-      }
-    }
-  }
+     }
 }
