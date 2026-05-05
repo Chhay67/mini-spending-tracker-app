@@ -9,7 +9,7 @@
           "spending-tracker-dev-site"
         ],
         "prod": [
-          "spending-tracker-site"
+          "tracking-spend-site"
         ]
       }
     }
