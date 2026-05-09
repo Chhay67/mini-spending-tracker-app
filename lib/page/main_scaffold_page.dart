@@ -31,18 +31,12 @@ class MainScaffoldPage extends StatelessWidget {
       BlocProvider(create: (_) => serviceLocator<SelectedMonthCubit>()),
     ], child: BlocBuilder<NavBarCubit, int>(builder: (context, selectedIndex) {
       return Scaffold(
-        body: NestedScrollView(
-          floatHeaderSlivers: true,
-          headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            SliverAppBar(
-              floating: true,
-              leading: Image.asset("assets/icon/icon.png", cacheHeight: 150, cacheWidth: 150, filterQuality: FilterQuality.high),
-              centerTitle: false,
-              title: Text(AppConfig.appName, style: textTheme.titleLarge?.copyWith(color: AppColors.primary)),
-            ),
-          ],
-          body: child,
+        appBar: AppBar(
+          leading: Image.asset("assets/icon/icon.png", cacheHeight: 150, cacheWidth: 150, filterQuality: FilterQuality.high),
+          centerTitle: false,
+          title: Text(AppConfig.appName, style: textTheme.titleLarge?.copyWith(color: AppColors.primary)),
         ),
+        body: child,
         bottomNavigationBar: BottomNavigationBar(
           elevation: 0,
           currentIndex: selectedIndex,
