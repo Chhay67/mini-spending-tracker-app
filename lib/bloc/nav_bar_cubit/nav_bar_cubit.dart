@@ -4,11 +4,15 @@ import '../../page/main_scaffold_page.dart';
 import '../../route/routes.dart';
 
 class NavBarCubit extends Cubit<int> {
-  NavBarCubit() : super(_getInitialIndex());
+  NavBarCubit() : super(0);
 
-  static int _getInitialIndex() {
+  void init({int? initIndex}) {
+    if(initIndex != null) {
+      emit(initIndex);
+      return;
+    }
     final index = MainScaffoldPage.tabs.indexWhere((tab) => tab.route.path == Routes.addExpense.path);
-    return index != -1 ? index : 0;
+    emit(index);
   }
 
   void onChanged(int index) {

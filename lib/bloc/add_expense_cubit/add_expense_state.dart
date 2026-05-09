@@ -17,3 +17,16 @@ final class AddExpenseError extends AddExpenseState {
   const AddExpenseError({required this.message});
 }
 
+final class UpdateExpenseLoading extends AddExpenseState{
+
+}
+
+final class UpdateExpenseSuccess extends AddExpenseState{}
+
+final class UpdateExpenseError extends AddExpenseState{
+  final String message;
+
+  const UpdateExpenseError({required this.message});
+}
+
+

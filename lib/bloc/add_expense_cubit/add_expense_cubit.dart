@@ -24,7 +24,7 @@ class AddExpenseCubit extends Cubit<AddExpenseState> {
 
   Future<void> updateExpense({required num amount, DateTime? date, required String categoryId, String? note,required String transactionId}) async {
     try {
-      emit(AddExpenseLoading());
+      emit(UpdateExpenseLoading());
       final updatedExpense = AddExpenseModel(
           amount: amount,
           date: date ?? DateTime.now(),
@@ -34,9 +34,9 @@ class AddExpenseCubit extends Cubit<AddExpenseState> {
       );
       await repository.updateExpense(expense: updatedExpense);
 
-      emit(AddExpenseSuccess());
+      emit(UpdateExpenseSuccess());
     } catch (error) {
-      emit(AddExpenseError(message: error.toString()));
+      emit(UpdateExpenseError(message: error.toString()));
     }
   }
 }

@@ -108,7 +108,7 @@ class _AddOrUpdateExpensePageState extends State<AddOrUpdateExpensePage> {
             _resetForm();
             AppSnackBar.showSuccess(
               context,
-              message: isEditMode ? "Expense updated successfully" :"Expense added successfully",
+              message: "Expense added successfully",
               trialing: TextButton(
                 style: TextButton.styleFrom(
                   shape: RoundedRectangleBorder(
@@ -122,6 +122,25 @@ class _AddOrUpdateExpensePageState extends State<AddOrUpdateExpensePage> {
               ),
             );
             return;
+          }
+          if(state is UpdateExpenseSuccess){
+            _resetForm();
+            AppSnackBar.showSuccess(
+              context,
+              message: "Expense updated successfully" ,
+              trialing: TextButton(
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                    side: BorderSide(color: Colors.white, width: 0.5),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () => AppNavigation.navigateToRoute(context: context, routePath: Routes.transactions.path),
+                child: Text("view transactions", style: textTheme.bodySmall?.copyWith(color: Colors.white)),
+              ),
+            );
+            AppNavigation.navigateToRoute(context: context, routePath: Routes.addExpense.path);
           }
           if (state is AddExpenseError) {
             final bool isMessageContainBudgetNotFound = state.message.toLowerCase().contains("Budget not found".toLowerCase());
@@ -141,11 +160,29 @@ class _AddOrUpdateExpensePageState extends State<AddOrUpdateExpensePage> {
             );
             return;
           }
+          if (state is UpdateExpenseError) {
+            final bool isMessageContainBudgetNotFound = state.message.toLowerCase().contains("Budget not found".toLowerCase());
+            AppSnackBar.showError(
+              context, message:  state.message,
+              trialing:isMessageContainBudgetNotFound ? TextButton(
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                    side: BorderSide(color: Colors.white, width: 0.5),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () => AppNavigation.navigateToRoute(context: context, routePath: Routes.settings.path),
+                child: Text("Go Settings", style: textTheme.bodySmall?.copyWith(color: Colors.white)),
+              ) : null,
+            );
+            return;
+          }
         },
 
         builder: (context, state) {
-          final isSaveSuccess = state is AddExpenseSuccess;
-          final isSaving = state is AddExpenseLoading;
+          final isSaveSuccess = state is AddExpenseSuccess || state is UpdateExpenseSuccess;
+          final isSaving = state is AddExpenseLoading || state is UpdateExpenseLoading;
 
           return Form(
             key: formKey,

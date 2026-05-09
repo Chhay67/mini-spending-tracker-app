@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:mini_spend_tracker_app/core/enum/flavor.dart';
 import 'package:mini_spend_tracker_app/root_app.dart';
@@ -18,6 +19,7 @@ Future<void> main() async {
       AppConfig.init(flavor: FlavorEnum.kra);
       await initDependencies(config: AppConfig.instance);
       await Firebase.initializeApp(options: AppConfig.firebaseOptions);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
       runApp(const RootApp());
     },
         (error, stackTrace) {

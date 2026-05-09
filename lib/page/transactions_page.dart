@@ -137,7 +137,13 @@ class _TransactionsPageState extends State<TransactionsPage> {
                                     child: TextButton(
                                       style: TextButton.styleFrom(backgroundColor: AppColors.surface),
                                       onPressed: () async {
-                                        final pickedDate = await DatePicker.showDatePickerDialog(context, initialDate: _selectedDate);
+                                        DateTime? pickedDate;
+                                        if(_selectedFilter == FilterTypeEnum.month){
+                                          pickedDate = await DatePicker.showMonthPickerDialog(context,initialDate: _selectedDate);
+                                        } else if(_selectedFilter == FilterTypeEnum.day){
+                                          pickedDate = await DatePicker.showDatePickerDialog(context, initialDate: _selectedDate);
+                                        }
+
                                         if (pickedDate != null && context.mounted) {
                                           _selectedDate = pickedDate;
                                           onLoadTransactions(context);

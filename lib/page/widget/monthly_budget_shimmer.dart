@@ -22,7 +22,7 @@ class MonthlyBudgetShimmer extends StatelessWidget {
             child: Container(
               margin: EdgeInsets.only(left: AppPadding.smallPadding),
               width: 80,
-              height: 30,
+              height: 32,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(4),

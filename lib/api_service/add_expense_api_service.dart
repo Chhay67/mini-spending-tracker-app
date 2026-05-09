@@ -3,7 +3,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:intl/intl.dart';
+import 'package:mini_spend_tracker_app/core/utils/date_format.dart';
 import 'package:mini_spend_tracker_app/model/add_expense_model.dart';
 
 import '../core/exception/app_exception.dart';
@@ -22,7 +22,6 @@ class AddExpenseApiServiceImpl extends AddExpenseApiService {
   final DioClient dioClient;
 
 
-
   @override
   Future<void> addExpense({required AddExpenseModel expense}) async{
     try {
@@ -31,7 +30,7 @@ class AddExpenseApiServiceImpl extends AddExpenseApiService {
         queryParameters: {
           "action": "addTransaction",
           "data": jsonEncode({
-            "date": DateFormat('yyyy-MM-dd').format(expense.date),
+            "date": DateFormater.apiDateFormat(expense.date),
             "category_id": expense.categoryId,
             "amount": expense.amount,
             "note": expense.note,
@@ -56,7 +55,7 @@ class AddExpenseApiServiceImpl extends AddExpenseApiService {
           "action": "updateTransaction",
           "data": jsonEncode({
             "transaction_id": expense.transactionId,
-            "date": DateFormat('yyyy-MM-dd').format(expense.date),
+            "date": DateFormater.apiDateFormat(expense.date),
             "category_id": expense.categoryId,
             "amount": expense.amount,
             "note": expense.note,
